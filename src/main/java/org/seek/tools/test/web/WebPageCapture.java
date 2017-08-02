@@ -1,4 +1,4 @@
-package web.test.tools.ahot;
+package org.seek.tools.test.web;
 
 import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.comparison.*;
