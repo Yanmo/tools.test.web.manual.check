@@ -8,23 +8,28 @@
 
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
+apply plugin: "maven"
 
 version=0.1
-
-jar {
-	manifest {
-        attributes 'Main-Class': 'org.seek.tools.test.web.WebManualCheckTool'
-	}
-//	from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
-}
 
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     //jcenter()
+
+    // set local repository path.
+    maven {
+        url System.getenv("HOME") + "/.m2/repository"
+    }
     //We use maven central repository.
     mavenCentral()
+}
+
+sourceSets {
+    main {
+        output.resourcesDir = output.classesDir
+    }
 }
 
 dependencies {
@@ -46,11 +51,28 @@ dependencies {
 	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-server
 	compile group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '3.4.0'
 
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-chrome-driver
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-chrome-driver', version: '3.4.0'
+
 	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-firefox-driver
 	compile group: 'org.seleniumhq.selenium', name: 'selenium-firefox-driver', version: '3.4.0'
 
-	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-safari-driver
-	compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-ie-driver
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-ie-driver', version: '3.4.0'
 
+	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-safari-driver
+//	compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
+
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-edge-driver
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-edge-driver', version: '3.4.0'
+    
 }
+
+jar {
+    manifest {
+        attributes 'Main-Class': 'org.seek.tools.test.web.WebManualCheckTool'
+    }
+  from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
+}
+
 

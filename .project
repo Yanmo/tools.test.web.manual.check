@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>tools.web.test.check</name>
-	<comment>Project tools.web.test.check created by Buildship.</comment>
+	<name>tools.test.web.manual.check</name>
+	<comment>Project tools.test.web.manual.check created by Buildship.</comment>
 	<projects>
 	</projects>
 	<buildSpec>
