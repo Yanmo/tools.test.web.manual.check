@@ -18,11 +18,10 @@ repositories {
     // You can declare any Maven/Ivy/file repository here.
     //jcenter()
 
-    // set local repository path.
+    // We use remote mavem central repository and local repository
     maven {
         url System.getenv("HOME") + "/.m2/repository"
     }
-    //We use maven central repository.
     mavenCentral()
 }
 
@@ -61,7 +60,7 @@ dependencies {
     compile group: 'org.seleniumhq.selenium', name: 'selenium-ie-driver', version: '3.4.0'
 
 	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-safari-driver
-//	compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
+	compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-edge-driver
     compile group: 'org.seleniumhq.selenium', name: 'selenium-edge-driver', version: '3.4.0'
@@ -70,7 +69,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.seek.tools.test.web.WebManualCheckTool'
+        attributes 'Main-Class': 'org.seeek.tools.test.web.WebManualCheckTool'
     }
   from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 }
