@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.*;
 import org.openqa.selenium.firefox.*;
+import org.openqa.selenium.remote.*;
 import org.openqa.selenium.ie.*;
 import org.openqa.selenium.safari.*;
 import org.openqa.selenium.edge.*;
@@ -36,16 +37,10 @@ public class WebPageCapture {
 	// static
 	private static URL edgedriverurl;
 
-	private HashMap<String, String> processed = new HashMap<String, String>();
-	private HashMap<String, WebElement> notprocessed = new HashMap<String, WebElement>();
-	private HashMap<String, File> tagetfiles = new HashMap<String, File>();
-	private ArrayList<String> browsers = new ArrayList<String>();
-	private ArrayList<String> excepturi = new ArrayList<String>();
+	private HashMap<String, String> done = new HashMap<String, String>();
+	private HashMap<String, WebElement> yet = new HashMap<String, WebElement>();
 	private Screenshot screenshot = null;
-
-	private String savedir_baseuri_default = "C:/project/web.test.tools/results";
 	private File save;
-
 	private URL dest;
 	private String capturebrowser;
 
@@ -53,41 +48,55 @@ public class WebPageCapture {
 	private WebDriver driver;
 	private JavascriptExecutor jsexcutor;
 	private Dimension size;
-	private int windowheight = 768;
-	private int windowwidth = 1200;
+	private int iniheight = 768;
+	private int iniwidth = 1200;
 	
 	public WebPageCapture() {
 		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+		this.size = new Dimension(this.iniwidth, this.iniheight);
 	}
 
-	public WebPageCapture(URL url, File save, Dimension size) {
+	public WebPageCapture(File save) {
+		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+		this.size = new Dimension(this.iniwidth, this.iniheight);
+		this.save = save;
+	}
+
+	public WebPageCapture(String browsername, URL url) {
+		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+		this.dest = url;
+		this.size = new Dimension(this.iniwidth, this.iniheight);
+	}
+
+	public WebPageCapture(String browsername, URL url, File save) {
+		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+		this.dest = url;
+		this.save = save;
+		this.size = new Dimension(this.iniwidth, this.iniheight);
+	}
+	
+	public WebPageCapture(String browsername, URL url, File save, Dimension size) {
+		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
 		this.dest = url;
 		this.save = save;
 		this.size = size;
 	}
 	
-	public void main() throws Exception {
-//		browsers.add("chrome");
-//		browsers.add("ie");
-//		browsers.add("firefox");
-		browsers.add("edge");
-		
-		// for http 
-		String base = "http://localhost:8080/tips/ja/index.htm";
-		URL baseuri = new URL(base);
+	public void captureWebPage(String browsername, URL url) throws Exception {
+		setWebDriver(browsername);
+		getInternallinkList(url, this.yet, this.done);
+		destroyWebDriver();
+		yet.clear();
+		done.clear();
+	}
 
-		try {
-		    for(String browser : browsers){
-		    		setWebDriver(browser);
-				getInternallinkList(baseuri, notprocessed, processed);
-				destroyWebDriver();
-				notprocessed.clear();
-				processed.clear();
-	        }
-		}
-		finally {
-			this.driver.quit();
-		}
+	public void captureWebPage(String browsername, URL url, File save) throws Exception {
+		setWebDriver(browsername);
+		setSaveDir(save);
+		getInternallinkList(url, this.yet, this.done);
+		destroyWebDriver();
+		yet.clear();
+		done.clear();
 	}
 
 	public String getbrowsername() {
@@ -102,13 +111,17 @@ public class WebPageCapture {
 		this.driver = null;
 	}
 	
+	private void setSaveDir(File save) {
+		this.save = save;
+	}
 	
-	public HashMap<String, WebElement> getInternallinkList(URL url, HashMap<String, WebElement> notprocessed, HashMap<String, String> processed) throws Exception {
+	
+	public HashMap<String, WebElement> getInternallinkList(URL url, HashMap<String, WebElement> yet, HashMap<String, String> done) throws Exception {
 
 		WebDriver driver = getWebDriver();
 		driver.get(url.toString());
 		getWebPageCapture(driver, url, this.save);
-		processed.put(url.toString(), url.toString());
+		done.put(url.toString(), url.toString());
 
 		List<WebElement> anchors = driver.findElements(By.tagName("a")); 
 		HashMap<String, WebElement> add = new HashMap<String, WebElement>();
@@ -121,22 +134,26 @@ public class WebPageCapture {
 			String[] uries = anchors.get(i).getAttribute("href").split("#");
 			String href = uries[0];
 			if (href.contains("javascript:")) { continue; }
-			if (notprocessed.containsKey(href)) { continue; }
-			if (processed.containsKey(href)) { continue; }
+			if (yet.containsKey(href)) { continue; }
+			if (done.containsKey(href)) { continue; }
 			if (!this.dest.getHost().equals(new URL(href).getHost())) { continue; }
 			add.put(href, anchors.get(i));
 		}
-		notprocessed.remove(url.toString());
+		yet.remove(url.toString());
 		if (add.size() != 0) { 
-			notprocessed.putAll(add);
-			Set<String> keys = notprocessed.keySet();
+			yet.putAll(add);
+			Set<String> keys = yet.keySet();
 			for( int i = 0; i < keys.size(); i++ ) {
 				String key = keys.toArray(new String[0])[i];
 				URL targeturl = new URL(key);
-				notprocessed = getInternallinkList(targeturl, add, processed);
+				yet = getInternallinkList(targeturl, add, done);
 		    }
 		}
-		return notprocessed;
+		return yet;
+	}
+	
+	private String getEdgeDriverPath() throws Exception {
+		return this.edgedriverurl.getPath();
 	}
 
 	public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
@@ -166,7 +183,7 @@ public class WebPageCapture {
 			  	this.driver =  new InternetExplorerDriver();;
 				break;
 		  case "edge":
-				System.setProperty("webdriver.edge.driver", this.edgedriverurl.getPath());
+				System.setProperty("webdriver.edge.driver", this.getEdgeDriverPath());
 			  	this.driver =  new EdgeDriver();
 				break;
 		  case "safari":
@@ -174,7 +191,7 @@ public class WebPageCapture {
 				break;
 		}
 		this.jsexcutor = (JavascriptExecutor) this.driver;
-		this.driver.manage().window().setSize();
+		this.driver.manage().window().setSize(new Dimension(1024, 768));
 		this.setbrowsername(browser);
 	}
 
