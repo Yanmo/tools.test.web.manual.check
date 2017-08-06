@@ -14,7 +14,7 @@ import org.openqa.selenium.chrome.*;
 import org.openqa.selenium.firefox.*;
 import org.openqa.selenium.remote.*;
 import org.openqa.selenium.ie.*;
-import org.openqa.selenium.safari.*;
+import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.edge.*;
 
 //for ashot library
@@ -57,28 +57,23 @@ public class WebPageCapture {
 	}
 
 	public WebPageCapture(File save) {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
-		this.size = new Dimension(this.iniwidth, this.iniheight);
+		this();
+		if (!save.exists()) { save.mkdirs(); }
 		this.save = save;
 	}
 
-	public WebPageCapture(String browsername, URL url) {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+	public WebPageCapture(URL url) {
+		this();
 		this.dest = url;
-		this.size = new Dimension(this.iniwidth, this.iniheight);
 	}
 
-	public WebPageCapture(String browsername, URL url, File save) {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
+	public WebPageCapture(URL url, File save) {
+		this(save);
 		this.dest = url;
-		this.save = save;
-		this.size = new Dimension(this.iniwidth, this.iniheight);
 	}
 	
-	public WebPageCapture(String browsername, URL url, File save, Dimension size) {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
-		this.dest = url;
-		this.save = save;
+	public WebPageCapture(URL url, File save, Dimension size) {
+		this(url, save);
 		this.size = size;
 	}
 	
@@ -92,7 +87,6 @@ public class WebPageCapture {
 
 	public void captureWebPage(String browsername, URL url, File save) throws Exception {
 		setWebDriver(browsername);
-		setSaveDir(save);
 		getInternallinkList(url, this.yet, this.done);
 		destroyWebDriver();
 		yet.clear();
@@ -111,10 +105,9 @@ public class WebPageCapture {
 		this.driver = null;
 	}
 	
-	private void setSaveDir(File save) {
-		this.save = save;
+	private void setEdgeDriverPath() {
+		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
 	}
-	
 	
 	public HashMap<String, WebElement> getInternallinkList(URL url, HashMap<String, WebElement> yet, HashMap<String, String> done) throws Exception {
 
@@ -165,7 +158,6 @@ public class WebPageCapture {
 	    screenshot = new AShot()
 	    			.shootingStrategy(ShootingStrategies.viewportPasting(100))
 	    			.takeScreenshot(driver);
-		if (!savedir.exists()) { savedir.mkdirs(); }
 		String filename = Paths.get(url.getPath()).getFileName().toString().replace(".htm", "_" + this.getbrowsername() + ".png");
 	    ImageIO.write(screenshot.getImage(), "PNG", new File(savedir.getPath() + "//" + filename));
 	}
@@ -191,7 +183,7 @@ public class WebPageCapture {
 				break;
 		}
 		this.jsexcutor = (JavascriptExecutor) this.driver;
-		this.driver.manage().window().setSize(new Dimension(1024, 768));
+		this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
 		this.setbrowsername(browser);
 	}
 

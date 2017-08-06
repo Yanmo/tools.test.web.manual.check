@@ -16,11 +16,12 @@ public class WebManualCheckTool {
 
 //		browsers.add(WebPageCapture.CHROME);
 //		browsers.add(WebPageCapture.IE);
-//		browsers.add(WebPageCapture.SAFARI);
+		browsers.add(WebPageCapture.SAFARI);
 //		browsers.add(WebPageCapture.FIREFOX);
-		browsers.add(WebPageCapture.EDGE);
+//		browsers.add(WebPageCapture.EDGE);
 
-		URL target = new URL("http://localhost:8080/tips/ja/index.htm");
+		URL target = new URL("http://www.yahoo.co.jp/");
+		System.out.println(WebManualCheckTool.class.getClassLoader().getResource("."));
 		WebPageCapture capture = new WebPageCapture(new File("C:\\project\\web.test.tools\\results"));
 	    for(String browser : browsers){
 			capture.captureWebPage(browser, target);
