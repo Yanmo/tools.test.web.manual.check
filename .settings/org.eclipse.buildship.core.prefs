@@ -1,3 +1,8 @@
+#Thu Aug 10 16:16:56 JST 2017
 connection.gradle.distribution=GRADLE_DISTRIBUTION(WRAPPER)
-connection.project.dir=
+override.workspace.settings=true
 eclipse.preferences.version=1
+gradle.user.home=
+connection.project.dir=
+offline.mode=false
+build.scans.enabled=false

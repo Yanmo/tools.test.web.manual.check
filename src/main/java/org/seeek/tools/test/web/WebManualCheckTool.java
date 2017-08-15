@@ -6,6 +6,7 @@ import org.seeek.tools.util.*;
 import org.seeek.tools.test.web.*;
 import org.junit.Test;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 
 public class WebManualCheckTool {
@@ -14,15 +15,19 @@ public class WebManualCheckTool {
 		
 		List<String> browsers = new ArrayList<String>();
 
-//		browsers.add(WebPageCapture.CHROME);
-//		browsers.add(WebPageCapture.IE);
-		browsers.add(WebPageCapture.SAFARI);
-//		browsers.add(WebPageCapture.FIREFOX);
-//		browsers.add(WebPageCapture.EDGE);
+		
+		if (PlatformUtils.isMac()) {
+			browsers.add(WebPageCapture.SAFARI);
+		} else {
+			browsers.add(WebPageCapture.CHROME);
+//			browsers.add(WebPageCapture.IE);
+//			browsers.add(WebPageCapture.FIREFOX);
+//			browsers.add(WebPageCapture.EDGE);
+		}
 
-		URL target = new URL("http://www.yahoo.co.jp/");
-		System.out.println(WebManualCheckTool.class.getClassLoader().getResource("."));
-		WebPageCapture capture = new WebPageCapture(new File("C:\\project\\web.test.tools\\results"));
+		URL target = new URL("file:C:/project/html.cnvt/cp/src/ltr/ONLINE/OUTPUT/GUIDE/convert/adjust_media.htm");
+		File save = new File("file:C:/project/html.cnvt/cp/src/ltr/ONLINE/OUTPUT/GUIDE/RESULT/");
+		WebPageCapture capture = new WebPageCapture(save);
 	    for(String browser : browsers){
 			capture.captureWebPage(browser, target);
 	    }

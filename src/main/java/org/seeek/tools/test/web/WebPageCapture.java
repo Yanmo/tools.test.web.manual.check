@@ -36,6 +36,7 @@ public class WebPageCapture {
 
 	// static
 	private static URL edgedriverurl;
+	private static URL iedriverurl;
 
 	private HashMap<String, String> done = new HashMap<String, String>();
 	private HashMap<String, WebElement> yet = new HashMap<String, WebElement>();
@@ -52,13 +53,11 @@ public class WebPageCapture {
 	private int iniwidth = 1200;
 	
 	public WebPageCapture() {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
 		this.size = new Dimension(this.iniwidth, this.iniheight);
 	}
 
 	public WebPageCapture(File save) {
 		this();
-		if (!save.exists()) { save.mkdirs(); }
 		this.save = save;
 	}
 
@@ -105,10 +104,6 @@ public class WebPageCapture {
 		this.driver = null;
 	}
 	
-	private void setEdgeDriverPath() {
-		this.edgedriverurl = this.getClass().getClassLoader().getResource("MicrosoftWebDriver.exe");
-	}
-	
 	public HashMap<String, WebElement> getInternallinkList(URL url, HashMap<String, WebElement> yet, HashMap<String, String> done) throws Exception {
 
 		WebDriver driver = getWebDriver();
@@ -145,26 +140,29 @@ public class WebPageCapture {
 		return yet;
 	}
 	
-	private String getEdgeDriverPath() throws Exception {
-		return this.edgedriverurl.getPath();
+	private String getWebDriverPath(String drivername) throws Exception {
+		return this.getClass().getClassLoader().getResource(drivername).getPath();
 	}
 
 	public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
 
-		this.jsexcutor.executeScript("document.getElementsByClassName('navbar')[0].style.position='releative';");
-		this.jsexcutor.executeScript("document.getElementById('page-top').style.visibility='hidden';");
+//		this.jsexcutor.executeScript("document.getElementsByClassName('navbar')[0].style.position='releative';");
+//		this.jsexcutor.executeScript("document.getElementById('page-top').style.visibility='hidden';");
 //		this.jsexcutor.executeScript("document.getElementById('page-back')[0].style.display='hidden';");
 		Thread.sleep(100);
 	    screenshot = new AShot()
 	    			.shootingStrategy(ShootingStrategies.viewportPasting(100))
 	    			.takeScreenshot(driver);
 		String filename = Paths.get(url.getPath()).getFileName().toString().replace(".htm", "_" + this.getbrowsername() + ".png");
-	    ImageIO.write(screenshot.getImage(), "PNG", new File(savedir.getPath() + "//" + filename));
+		File savefilename = new File(savedir.getPath() + "//" + filename);
+		if (!savedir.exists()) { savedir.mkdirs(); }
+	    ImageIO.write(screenshot.getImage(), "PNG", savefilename);
 	}
 	
 	public void setWebDriver(String browser) throws Exception {
 		switch (browser){
 		  case "chrome":
+				System.setProperty("webdriver.chrome.driver", this.getWebDriverPath("chromedriver.exe"));
 				this.driver = new ChromeDriver();
 				break;
 		  case "firefox":
@@ -172,10 +170,11 @@ public class WebPageCapture {
 				this.driver = new FirefoxDriver(ffprofiles);
 				break;
 		  case "ie":
+				System.setProperty("webdriver.ie.driver", this.getWebDriverPath("IEDriverServer.exe"));
 			  	this.driver =  new InternetExplorerDriver();;
 				break;
 		  case "edge":
-				System.setProperty("webdriver.edge.driver", this.getEdgeDriverPath());
+				System.setProperty("webdriver.edge.driver", this.getWebDriverPath("MicrosoftWebDriver.exe"));
 			  	this.driver =  new EdgeDriver();
 				break;
 		  case "safari":
