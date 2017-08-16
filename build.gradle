@@ -64,7 +64,9 @@ dependencies {
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-edge-driver
     compile group: 'org.seleniumhq.selenium', name: 'selenium-edge-driver', version: '3.4.0'
-    
+
+	// https://mvnrepository.com/artifact/commons-cli/commons-cli
+	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
 }
 
 jar {

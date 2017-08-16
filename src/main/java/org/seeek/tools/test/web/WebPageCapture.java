@@ -2,6 +2,9 @@ package org.seeek.tools.test.web;
 
 import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import javax.imageio.*;
 import org.junit.Test;
 
@@ -114,6 +117,8 @@ public class WebPageCapture {
 		List<WebElement> anchors = driver.findElements(By.tagName("a")); 
 		HashMap<String, WebElement> add = new HashMap<String, WebElement>();
 		int anchorssize = anchors.size();
+		String regex = "^file://";
+		Pattern ptn = Pattern.compile(regex);
 		for(int i=0;i<anchorssize;i++) {
 			String hreforg = anchors.get(i).getAttribute("href");
 			if (hreforg == null) { continue; } 
@@ -124,7 +129,13 @@ public class WebPageCapture {
 			if (href.contains("javascript:")) { continue; }
 			if (yet.containsKey(href)) { continue; }
 			if (done.containsKey(href)) { continue; }
-			if (!this.dest.getHost().equals(new URL(href).getHost())) { continue; }
+			Matcher mtc = ptn.matcher(href);
+			if (mtc.find()) {
+				// internal url
+			} else {
+				// external url
+				if (!this.dest.getHost().equals(new URL(href).getHost())) { continue; }
+			}
 			add.put(href, anchors.get(i));
 		}
 		yet.remove(url.toString());
@@ -153,7 +164,7 @@ public class WebPageCapture {
 	    screenshot = new AShot()
 	    			.shootingStrategy(ShootingStrategies.viewportPasting(100))
 	    			.takeScreenshot(driver);
-		String filename = Paths.get(url.getPath()).getFileName().toString().replace(".htm", "_" + this.getbrowsername() + ".png");
+		String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)", "_" + this.getbrowsername() + ".png");
 		File savefilename = new File(savedir.getPath() + "//" + filename);
 		if (!savedir.exists()) { savedir.mkdirs(); }
 	    ImageIO.write(screenshot.getImage(), "PNG", savefilename);
@@ -182,7 +193,9 @@ public class WebPageCapture {
 				break;
 		}
 		this.jsexcutor = (JavascriptExecutor) this.driver;
-		this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
+	  	if(PlatformUtils.isMac()) { //this.driver.manage().window().setSize(this.iniheight, this.iniwidth); 
+	  	}
+	  	else { this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth)); }
 		this.setbrowsername(browser);
 	}
 
