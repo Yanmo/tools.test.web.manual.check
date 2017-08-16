@@ -8,6 +8,8 @@ import org.junit.Test;
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.CommandLineParser;
@@ -41,11 +43,23 @@ public class WebManualCheckTool {
 		String cmdin = cmd.getOptionValue("i");
 		String cmdout = cmd.getOptionValue("o");
 		
-		URL target = new URL("file:" + cmdin);
+		URL target = new URL(cmdin);
 		File save = new File(cmdout);
 
+		String regex = "file://";
+		Pattern ptn = Pattern.compile(regex);
+		Matcher mtc = ptn.matcher(cmdin);
+		if (mtc.find()) {
+			// internal url
+			System.out.println("match");
+		} else {
+			// external url
+			System.out.println("no match");
+		}
+
+
+		WebPageCapture capture = new WebPageCapture(save);
 		try {
-			WebPageCapture capture = new WebPageCapture(save);
 //			System.exit(0);
 		    for(String browser : browsers){
 				capture.captureWebPage(browser, target);
@@ -55,7 +69,7 @@ public class WebManualCheckTool {
 			e.printStackTrace(System.err);
 		}
 		finally {
-			
+			capture.destroyWebDriver();
 		}
 	}
 

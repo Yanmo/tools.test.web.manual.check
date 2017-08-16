@@ -117,8 +117,6 @@ public class WebPageCapture {
 		List<WebElement> anchors = driver.findElements(By.tagName("a")); 
 		HashMap<String, WebElement> add = new HashMap<String, WebElement>();
 		int anchorssize = anchors.size();
-		String regex = "^file://";
-		Pattern ptn = Pattern.compile(regex);
 		for(int i=0;i<anchorssize;i++) {
 			String hreforg = anchors.get(i).getAttribute("href");
 			if (hreforg == null) { continue; } 
@@ -129,13 +127,7 @@ public class WebPageCapture {
 			if (href.contains("javascript:")) { continue; }
 			if (yet.containsKey(href)) { continue; }
 			if (done.containsKey(href)) { continue; }
-			Matcher mtc = ptn.matcher(href);
-			if (mtc.find()) {
-				// internal url
-			} else {
-				// external url
-				if (!this.dest.getHost().equals(new URL(href).getHost())) { continue; }
-			}
+			if (!this.dest.getHost().equals(new URL(href).getHost())) { continue; }
 			add.put(href, anchors.get(i));
 		}
 		yet.remove(url.toString());
@@ -165,7 +157,7 @@ public class WebPageCapture {
 	    			.shootingStrategy(ShootingStrategies.viewportPasting(100))
 	    			.takeScreenshot(driver);
 		String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)", "_" + this.getbrowsername() + ".png");
-		File savefilename = new File(savedir.getPath() + "//" + filename);
+		File savefilename = new File(savedir.getPath() + File.separator + filename);
 		if (!savedir.exists()) { savedir.mkdirs(); }
 	    ImageIO.write(screenshot.getImage(), "PNG", savefilename);
 	}
