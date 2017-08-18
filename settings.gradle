@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'tools.test.web.manual.check'
+rootProject.name = 'tools.util.page-capture'

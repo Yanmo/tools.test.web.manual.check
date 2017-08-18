@@ -25,11 +25,11 @@ repositories {
     mavenCentral()
 }
 
-sourceSets {
-    main {
-        output.resourcesDir = output.classesDir
-    }
-}
+//sourceSets {
+//    main {
+//        output.resourcesDir = output.classesDir
+//    }
+//}
 
 dependencies {
     // This dependency is exported to consumers, that is to say found on their compile classpath.
