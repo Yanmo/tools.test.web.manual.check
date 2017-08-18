@@ -27,21 +27,20 @@ public class WebManualCheckTool {
 		Options options = new Options();
 		options.addOption("i", true, "specific input file.");
 		options.addOption("o", true, "specific output directory.");
+		options.addOption("e", true, "specific webdirver directory.");
+		options.addOption("b", true, "specific browser name.");
+		options.addOption("l", true, "specific language");
 		
 		CommandLineParser cmdparser = new DefaultParser();
 		CommandLine cmd = cmdparser.parse(options, args);
 		
-		if (PlatformUtils.isMac()) {
-			browsers.add(WebPageCapture.SAFARI);
-		} else {
-			browsers.add(WebPageCapture.CHROME);
-//			browsers.add(WebPageCapture.IE);
-//			browsers.add(WebPageCapture.FIREFOX);
-//			browsers.add(WebPageCapture.EDGE);
-		}
-		
 		String cmdin = cmd.getOptionValue("i");
 		String cmdout = cmd.getOptionValue("o");
+		String cmdwebdriverpath = cmd.getOptionValue("e");
+		String cmdspecbrowsers = cmd.getOptionValue("b");
+		String cmdlang = cmd.getOptionValue("l");
+
+		browsers.addAll(Arrays.asList(cmdspecbrowsers.split(":", -1)));
 		
 		URL target = new URL(cmdin);
 		File save = new File(cmdout);
@@ -57,10 +56,10 @@ public class WebManualCheckTool {
 			System.out.println("no match");
 		}
 
-
-		WebPageCapture capture = new WebPageCapture(save);
+		WebPageCapture capture = new WebPageCapture(target, save, cmdwebdriverpath);
+		capture.setContentLanguage(cmdlang);
+		
 		try {
-//			System.exit(0);
 		    for(String browser : browsers){
 				capture.captureWebPage(browser, target);
 		    }

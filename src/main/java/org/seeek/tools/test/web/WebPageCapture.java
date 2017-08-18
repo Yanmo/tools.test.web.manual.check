@@ -14,11 +14,16 @@ import java.nio.file.Paths;
 // for selenuim library
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.*;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.*;
-import org.openqa.selenium.remote.*;
+import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.ie.*;
-import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.edge.*;
+import org.openqa.selenium.edge.EdgeDriver;
+import org.openqa.selenium.safari.*;
+import org.openqa.selenium.safari.SafariDriver;
+import org.openqa.selenium.remote.*;
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
@@ -47,6 +52,8 @@ public class WebPageCapture {
 	private File save;
 	private URL dest;
 	private String capturebrowser;
+	private String driverpath;
+	private String lang;
 
 	// for selenium web driver
 	private WebDriver driver;
@@ -74,6 +81,12 @@ public class WebPageCapture {
 		this.dest = url;
 	}
 	
+	public WebPageCapture(URL url, File save, String path) {
+		this(save);
+		this.dest = url;
+		this.driverpath = path;
+	}
+	
 	public WebPageCapture(URL url, File save, Dimension size) {
 		this(url, save);
 		this.size = size;
@@ -82,7 +95,6 @@ public class WebPageCapture {
 	public void captureWebPage(String browsername, URL url) throws Exception {
 		setWebDriver(browsername);
 		getInternallinkList(url, this.yet, this.done);
-		destroyWebDriver();
 		yet.clear();
 		done.clear();
 	}
@@ -90,7 +102,6 @@ public class WebPageCapture {
 	public void captureWebPage(String browsername, URL url, File save) throws Exception {
 		setWebDriver(browsername);
 		getInternallinkList(url, this.yet, this.done);
-		destroyWebDriver();
 		yet.clear();
 		done.clear();
 	}
@@ -144,7 +155,7 @@ public class WebPageCapture {
 	}
 	
 	private String getWebDriverPath(String drivername) throws Exception {
-		return this.getClass().getClassLoader().getResource(drivername).getPath();
+		return this.driverpath + File.separator + drivername;
 	}
 
 	public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
@@ -156,28 +167,34 @@ public class WebPageCapture {
 	    screenshot = new AShot()
 	    			.shootingStrategy(ShootingStrategies.viewportPasting(100))
 	    			.takeScreenshot(driver);
-		String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)", "_" + this.getbrowsername() + ".png");
+		String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)", "_"+ this.lang + "_" + this.getbrowsername() + ".png");
 		File savefilename = new File(savedir.getPath() + File.separator + filename);
 		if (!savedir.exists()) { savedir.mkdirs(); }
 	    ImageIO.write(screenshot.getImage(), "PNG", savefilename);
 	}
+
+	public void setContentLanguage(String lang) throws Exception {
+		this.lang = lang;
+	}
+	
 	
 	public void setWebDriver(String browser) throws Exception {
 		switch (browser){
 		  case "chrome":
-				System.setProperty("webdriver.chrome.driver", this.getWebDriverPath("chromedriver.exe"));
+				System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY, this.getWebDriverPath("chromedriver.exe"));
 				this.driver = new ChromeDriver();
 				break;
 		  case "firefox":
+				System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY, this.getWebDriverPath("geckodriver.exe"));
 				FirefoxProfile ffprofiles = new FirefoxProfile();
 				this.driver = new FirefoxDriver(ffprofiles);
 				break;
 		  case "ie":
-				System.setProperty("webdriver.ie.driver", this.getWebDriverPath("IEDriverServer.exe"));
+				System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY, this.getWebDriverPath("IEDriverServer.exe"));
 			  	this.driver =  new InternetExplorerDriver();;
 				break;
 		  case "edge":
-				System.setProperty("webdriver.edge.driver", this.getWebDriverPath("MicrosoftWebDriver.exe"));
+				System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY, "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe");
 			  	this.driver =  new EdgeDriver();
 				break;
 		  case "safari":
@@ -195,13 +212,4 @@ public class WebPageCapture {
 		return this.driver;
 	}
 	
-	public void getPageCapture(String browser, File targetfile, File savedir) throws Exception {
-		// get capture files
-		WebDriver driver = getWebDriver();
-		String uri = (browser == "firefox") ? targetfile.getPath() : targetfile.getPath();
-		driver.get(uri);
-	    screenshot = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
-	    ImageIO.write(screenshot.getImage(), "PNG", new File(savedir.getPath() + "//" + targetfile.getName().replace(".htm", ".png")));
-	    driver.quit();
-	}
 }
