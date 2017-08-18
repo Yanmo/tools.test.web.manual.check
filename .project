@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>tools.util.page-capture</name>
-	<comment>Project tools.util.page-capture created by Buildship.</comment>
+	<name>util.selenium.web-capture</name>
+	<comment>Project util.selenium.web-capture created by Buildship.</comment>
 	<projects>
 	</projects>
 	<buildSpec>
