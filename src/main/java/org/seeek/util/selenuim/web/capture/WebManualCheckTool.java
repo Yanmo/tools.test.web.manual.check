@@ -1,9 +1,7 @@
-package org.seeek.tools.test.web;
+package org.seeek.util.selenuim.web.capture;
 
 import java.io.*;
 import java.util.*;
-import org.seeek.tools.util.*;
-import org.seeek.tools.test.web.*;
 import org.junit.Test;
 import java.net.URL;
 import java.nio.file.Paths;
@@ -16,6 +14,9 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
+
+import org.seeek.util.selenuim.*;
+import org.seeek.util.selenuim.web.capture.*;
 
 public class WebManualCheckTool {
 

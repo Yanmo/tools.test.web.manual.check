@@ -1,4 +1,4 @@
-package org.seeek.tools.test.web;
+package org.seeek.util.selenuim.web.capture;
 
 import java.net.URL;
 import java.util.*;
@@ -30,7 +30,7 @@ import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
-import org.seeek.tools.util.PlatformUtils;
+import org.seeek.util.os.*;;
 
 public class WebPageCapture {
     // constants
