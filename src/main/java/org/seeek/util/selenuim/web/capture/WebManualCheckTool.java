@@ -58,6 +58,7 @@ public class WebManualCheckTool {
             }
         } catch (Exception e) {
             e.printStackTrace(System.err);
+            throw e;
         } finally {
             capture.destroyWebDriver();
         }

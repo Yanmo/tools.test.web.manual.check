@@ -27,6 +27,7 @@ import org.openqa.selenium.remote.*;
 import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
+import org.openqa.selenium.Dimension;
 
 
 //for ashot library
@@ -184,6 +185,8 @@ public class WebPageCapture {
             break;
         case "safari":
             if (PlatformUtils.isMac()) {
+                SafariOptions options = new SafariOptions();
+                options.setUseTechnologyPreview(true);
                 this.driver = new SafariDriver();
             }
             break;
@@ -194,6 +197,8 @@ public class WebPageCapture {
         } else {
 //            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
         }
+        System.out.println(this.driver.manage().window().getSize().getHeight());
+        this.driver.manage().window().setSize(new org.openqa.selenium.Dimension(this.iniheight, this.iniwidth));
         this.setbrowsername(browser);
     }
 
