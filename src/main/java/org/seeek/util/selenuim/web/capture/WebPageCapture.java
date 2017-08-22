@@ -24,13 +24,19 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.safari.*;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.remote.*;
+import org.openqa.selenium.Platform;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
+
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
-import org.seeek.util.os.*;;
+import org.seeek.util.os.*;
+
+import com.gargoylesoftware.htmlunit.javascript.configuration.BrowserName;;
 
 public class WebPageCapture {
     // constants
@@ -41,15 +47,12 @@ public class WebPageCapture {
     public static final String SAFARI = "safari";
     public static final String GECKO = "gecko";
 
-    // static
-    private static URL edgedriverurl;
-    private static URL iedriverurl;
-
     private HashMap<String, String> done = new HashMap<String, String>();
     private HashMap<String, WebElement> yet = new HashMap<String, WebElement>();
     private Screenshot screenshot = null;
     private File save;
     private URL dest;
+    private URL remote;
     private String capturebrowser;
     private String driverpath;
     private String lang;
@@ -61,45 +64,16 @@ public class WebPageCapture {
     private int iniheight = 768;
     private int iniwidth = 1200;
 
-    public WebPageCapture() {
-        this.size = new Dimension(this.iniwidth, this.iniheight);
-    }
-
-    public WebPageCapture(File save) {
-        this();
+    public WebPageCapture(URL url, File save, String path, URL remote) {
+        this.dest = url;
         this.save = save;
-    }
-
-    public WebPageCapture(URL url) {
-        this();
-        this.dest = url;
-    }
-
-    public WebPageCapture(URL url, File save) {
-        this(save);
-        this.dest = url;
-    }
-
-    public WebPageCapture(URL url, File save, String path) {
-        this(save);
-        this.dest = url;
         this.driverpath = path;
-    }
-
-    public WebPageCapture(URL url, File save, Dimension size) {
-        this(url, save);
-        this.size = size;
+        this.remote = remote;
     }
 
     public void captureWebPage(String browsername, URL url) throws Exception {
-        setWebDriver(browsername);
-        getInternallinkList(url, this.yet, this.done);
-        yet.clear();
-        done.clear();
-    }
-
-    public void captureWebPage(String browsername, URL url, File save) throws Exception {
-        setWebDriver(browsername);
+        if(this.remote == null) { setWebDriver(browsername); } 
+        else {setRemoteWebDriver(browsername);}
         getInternallinkList(url, this.yet, this.done);
         yet.clear();
         done.clear();
@@ -169,7 +143,10 @@ public class WebPageCapture {
         // this.jsexcutor.executeScript("document.getElementById('page-top').style.visibility='hidden';");
         // this.jsexcutor.executeScript("document.getElementById('page-back')[0].style.display='hidden';");
         Thread.sleep(100);
-        screenshot = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
+//        screenshot = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
+        screenshot = this.getbrowsername().equals(WebPageCapture.SAFARI) ? 
+                        new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
+                        new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
         String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)",
                 "_" + this.lang + "_" + this.getbrowsername() + ".png");
         File savefilename = new File(savedir.getPath() + File.separator + filename);
@@ -214,7 +191,44 @@ public class WebPageCapture {
         if (PlatformUtils.isMac()) {
             // this.driver.manage().window().setSize(this.iniheight, this.iniwidth);
         } else {
-            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
+//            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
+        }
+        this.setbrowsername(browser);
+    }
+
+    public void setRemoteWebDriver(String browser) throws Exception {
+        DesiredCapabilities capabilities = new DesiredCapabilities();
+        switch (browser) {
+        case "chrome":
+            capabilities.setPlatform(Platform.WIN10);
+            capabilities.setBrowserName("chrome");
+            break;
+        case "firefox":
+            capabilities.setPlatform(Platform.WIN10);
+            capabilities.setBrowserName("firefox");
+            break;
+        case "ie":
+            capabilities.setPlatform(Platform.WIN10);
+            capabilities.setBrowserName("internet explorer");
+            break;
+        case "edge":
+            capabilities.setPlatform(Platform.WIN10);
+            capabilities.setBrowserName(BrowserType.EDGE);
+            break;
+        case "safari":
+            capabilities.setPlatform(Platform.MAC);
+            capabilities.setBrowserName("safari");
+            break;
+        default:
+            break;
+        }
+        RemoteWebDriver remoteDriver = new RemoteWebDriver(this.remote, capabilities);
+        this.driver = remoteDriver;
+        this.jsexcutor = (JavascriptExecutor) this.driver;
+        if (PlatformUtils.isMac()) {
+            // this.driver.manage().window().setSize(this.iniheight, this.iniwidth);
+        } else {
+//            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
         }
         this.setbrowsername(browser);
     }

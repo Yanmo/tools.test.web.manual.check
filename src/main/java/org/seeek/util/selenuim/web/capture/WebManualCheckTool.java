@@ -31,6 +31,7 @@ public class WebManualCheckTool {
         options.addOption("e", true, "specific webdirver directory.");
         options.addOption("b", true, "specific browser name.");
         options.addOption("l", true, "specific language");
+        options.addOption("remote", true, "specific remote web server adoress.");
 
         CommandLineParser cmdparser = new DefaultParser();
         CommandLine cmd = cmdparser.parse(options, args);
@@ -40,11 +41,13 @@ public class WebManualCheckTool {
         String cmdwebdriverpath = cmd.getOptionValue("e");
         String cmdspecbrowsers = cmd.getOptionValue("b");
         String cmdlang = cmd.getOptionValue("l");
+        String cmdremote = cmd.getOptionValue("remote");
 
         browsers.addAll(Arrays.asList(cmdspecbrowsers.split(":", -1)));
 
-        URL target = new URL(cmdin);
+        URL target = new URL(cmdin.toLowerCase());
         File save = new File(cmdout);
+        URL remote = (cmdremote == "" ? null : new URL(cmdremote));
 
         String regex = "file://";
         Pattern ptn = Pattern.compile(regex);
@@ -57,7 +60,7 @@ public class WebManualCheckTool {
             System.out.println("no match");
         }
 
-        WebPageCapture capture = new WebPageCapture(target, save, cmdwebdriverpath);
+        WebPageCapture capture = new WebPageCapture(target, save, cmdwebdriverpath, remote);
         capture.setContentLanguage(cmdlang);
 
         try {
@@ -69,6 +72,7 @@ public class WebManualCheckTool {
         } finally {
             capture.destroyWebDriver();
         }
+        System.out.println("capture finished!");
     }
 
 }
