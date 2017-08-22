@@ -1,4 +1,4 @@
-package org.seeek.util.os;
+package org.seeek.util;
 
 import java.io.File;
 import java.util.ArrayList;

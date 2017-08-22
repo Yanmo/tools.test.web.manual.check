@@ -34,7 +34,7 @@ import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
-import org.seeek.util.os.*;
+import org.seeek.util.*;
 
 import com.gargoylesoftware.htmlunit.javascript.configuration.BrowserName;;
 
@@ -56,6 +56,7 @@ public class WebPageCapture {
     private String capturebrowser;
     private String driverpath;
     private String lang;
+    private String js;
 
     // for selenium web driver
     private WebDriver driver;
@@ -87,6 +88,10 @@ public class WebPageCapture {
         this.capturebrowser = name;
     }
 
+    public void setjs(String js) {
+    		this.js = js;
+    }
+    
     public void destroyWebDriver() {
         this.driver.quit();
         this.driver = null;
@@ -139,11 +144,8 @@ public class WebPageCapture {
 
     public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
 
-        // this.jsexcutor.executeScript("document.getElementsByClassName('navbar')[0].style.position='releative';");
-        // this.jsexcutor.executeScript("document.getElementById('page-top').style.visibility='hidden';");
-        // this.jsexcutor.executeScript("document.getElementById('page-back')[0].style.display='hidden';");
+    		if(!this.js.isEmpty()) this.jsexcutor.executeScript(this.js);
         Thread.sleep(100);
-//        screenshot = new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
         screenshot = this.getbrowsername().equals(WebPageCapture.SAFARI) ? 
                         new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
                         new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
@@ -174,7 +176,6 @@ public class WebPageCapture {
             System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
                     this.getWebDriverPath("IEDriverServer.exe"));
             this.driver = new InternetExplorerDriver();
-            ;
             break;
         case "edge":
             System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
