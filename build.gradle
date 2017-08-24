@@ -71,7 +71,7 @@ dependencies {
 
 jar {
     manifest {
-        attributes 'Main-Class': 'org.seeek.tools.test.web.WebManualCheckTool'
+        attributes 'Main-Class': 'org.seeek.util.selenuim.web.capture.WebManualCheckTool'
     }
   from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 }

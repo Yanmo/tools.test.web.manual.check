@@ -3,6 +3,8 @@ package org.seeek.util.selenuim.web.capture;
 import java.io.*;
 import java.util.*;
 import org.junit.Test;
+import org.openqa.selenium.WebDriver;
+
 import java.net.URL;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -30,38 +32,38 @@ public class WebManualCheckTool {
         Options options = new Options();
         options.addRequiredOption("i", "in", true, "specific input file.");
         options.addRequiredOption("o", "out", true, "specific output directory.");
-        options.addOption("driver", true, "specific webdirver directory.");
         options.addRequiredOption("b", "browser", true, "specific browser name.");
         options.addRequiredOption("l", "lang", true, "specific language");
+        options.addOption("driver", true, "specific webdirver directory.");
         options.addOption("remote", true, "specific remote web server adoress.");
         options.addOption("js", true, "specific execute javascriot file.");
 
         CommandLineParser cmdparser = new DefaultParser();
         CommandLine cmd = cmdparser.parse(options, args);
 
-        browsers.addAll(Arrays.asList(cmd.getOptionValue("b").split(":", -1)));
-        
         URL target = new URL(cmd.getOptionValue("i").toLowerCase());
         File save = new File(cmd.getOptionValue("o"));
-        URL remoteurl = cmd.getOptionValue("remote") == null ? null : new URL(cmd.getOptionValue("remote"));
-        String js = cmd.getOptionValue("js") == null ? "" : Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "");
+        browsers.addAll(Arrays.asList(cmd.getOptionValue("b").split(":", -1)));
         String lang = cmd.getOptionValue("l") == null ? "EN" : cmd.getOptionValue("l");
         String driverpath = cmd.getOptionValue("driver") == null ? "" : cmd.getOptionValue("driver");
+        URL remoteurl = cmd.getOptionValue("remote") == null ? null : new URL(cmd.getOptionValue("remote"));
+        String js = cmd.getOptionValue("js") == null ? "" : Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "");
 
         WebPageCapture capture = new WebPageCapture(target, save, driverpath, remoteurl);
         capture.setContentLanguage(lang);
         capture.setjs(js);
 
-        try {
             for (String browser : browsers) {
-                capture.captureWebPage(browser, target);
+                System.out.println("capture begin...." + browser);
+                try {
+                    capture.captureWebPage(browser, target);
+                } catch (Exception e) {
+                    e.printStackTrace(System.err);
+                    capture.destroyWebDriver();
+                    throw e;
+                }
+                capture.destroyWebDriver();
             }
-        } catch (Exception e) {
-            e.printStackTrace(System.err);
-            throw e;
-        } finally {
-            capture.destroyWebDriver();
-        }
         System.out.println("capture finished!");
     }
 

@@ -62,15 +62,14 @@ public class WebPageCapture {
     // for selenium web driver
     private WebDriver driver;
     private JavascriptExecutor jsexcutor;
-    private Dimension size;
-    private int iniheight = 768;
-    private int iniwidth = 1200;
+    private org.openqa.selenium.Dimension size;
 
     public WebPageCapture(URL url, File save, String path, URL remote) {
         this.dest = url;
         this.save = save;
         this.driverpath = path;
         this.remote = remote;
+        this.size = new org.openqa.selenium.Dimension(1024, 768);
     }
 
     public void captureWebPage(String browsername, URL url) throws Exception {
@@ -143,15 +142,19 @@ public class WebPageCapture {
         return this.driverpath + File.separator + drivername;
     }
 
+    public void setWindowSize(org.openqa.selenium.Dimension size) throws Exception {
+        this.driver.manage().window().setSize(size);
+    }
+    
     public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
 
-    		if(!this.js.isEmpty()) this.jsexcutor.executeScript(this.js);
+        if (!this.js.isEmpty()) this.jsexcutor.executeScript(this.js);
         Thread.sleep(100);
         screenshot = this.getbrowsername().equals(WebPageCapture.SAFARI) ? 
                         new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
                         new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
         String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)",
-                "_" + this.lang + "_" + this.getbrowsername() + ".png");
+                "_" + this.getbrowsername() + "_" + this.lang + ".png");
         File savefilename = new File(savedir.getPath() + File.separator + filename);
         if (!savedir.exists()) savedir.mkdirs();
         ImageIO.write(screenshot.getImage(), "PNG", savefilename);
@@ -192,13 +195,6 @@ public class WebPageCapture {
             break;
         }
         this.jsexcutor = (JavascriptExecutor) this.driver;
-        if (PlatformUtils.isMac()) {
-            // this.driver.manage().window().setSize(this.iniheight, this.iniwidth);
-        } else {
-//            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
-        }
-        System.out.println(this.driver.manage().window().getSize().getHeight());
-        this.driver.manage().window().setSize(new org.openqa.selenium.Dimension(this.iniheight, this.iniwidth));
         this.setbrowsername(browser);
     }
 
@@ -222,20 +218,21 @@ public class WebPageCapture {
             capabilities.setBrowserName(BrowserType.EDGE);
             break;
         case "safari":
+            SafariOptions sOptions = new SafariOptions();
+            sOptions.setUseCleanSession(true); // init a clean Safari session at all times
+            sOptions.setUseTechnologyPreview(true); // enable Technology Preview
             capabilities.setPlatform(Platform.MAC);
             capabilities.setBrowserName("safari");
+            capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
             break;
         default:
             break;
         }
         RemoteWebDriver remoteDriver = new RemoteWebDriver(this.remote, capabilities);
         this.driver = remoteDriver;
+            this.driver.manage().window().setPosition(new Point(0, 0));
+            this.driver.manage().window().setSize(this.size);
         this.jsexcutor = (JavascriptExecutor) this.driver;
-        if (PlatformUtils.isMac()) {
-            // this.driver.manage().window().setSize(this.iniheight, this.iniwidth);
-        } else {
-//            this.driver.manage().window().setSize(new Dimension(this.iniheight, this.iniwidth));
-        }
         this.setbrowsername(browser);
     }
 
