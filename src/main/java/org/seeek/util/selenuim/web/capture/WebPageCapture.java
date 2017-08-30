@@ -104,6 +104,7 @@ public class WebPageCapture {
         driver.get(url.toString());
         getWebPageCapture(driver, url, this.save);
         done.put(url.toString(), url.toString());
+        System.out.println("captured -> " + url.toString());
 
         List<WebElement> anchors = driver.findElements(By.tagName("a"));
         HashMap<String, WebElement> add = new HashMap<String, WebElement>();
@@ -190,7 +191,7 @@ public class WebPageCapture {
             if (PlatformUtils.isMac()) {
                 SafariOptions options = new SafariOptions();
                 options.setUseTechnologyPreview(true);
-                this.driver = new SafariDriver();
+                this.driver = new SafariDriver(options);
             }
             break;
         }
@@ -201,28 +202,28 @@ public class WebPageCapture {
     public void setRemoteWebDriver(String browser) throws Exception {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         switch (browser) {
-        case "chrome":
+        case BrowserType.CHROME:
             capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName("chrome");
+            capabilities.setBrowserName(BrowserType.CHROME);
             break;
-        case "firefox":
+        case BrowserType.FIREFOX:
             capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName("firefox");
+            capabilities.setBrowserName(BrowserType.FIREFOX);
             break;
         case "ie":
             capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName("internet explorer");
+            capabilities.setBrowserName(BrowserType.IE);
             break;
         case "edge":
             capabilities.setPlatform(Platform.WIN10);
             capabilities.setBrowserName(BrowserType.EDGE);
             break;
-        case "safari":
+        case BrowserType.SAFARI:
             SafariOptions sOptions = new SafariOptions();
             sOptions.setUseCleanSession(true); // init a clean Safari session at all times
-            sOptions.setUseTechnologyPreview(true); // enable Technology Preview
+            sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
             capabilities.setPlatform(Platform.MAC);
-            capabilities.setBrowserName("safari");
+            capabilities.setBrowserName(BrowserType.SAFARI);
             capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
             break;
         default:
@@ -230,8 +231,8 @@ public class WebPageCapture {
         }
         RemoteWebDriver remoteDriver = new RemoteWebDriver(this.remote, capabilities);
         this.driver = remoteDriver;
-            this.driver.manage().window().setPosition(new Point(0, 0));
-            this.driver.manage().window().setSize(this.size);
+        this.driver.manage().window().setPosition(new Point(0, 0));
+        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.jsexcutor = (JavascriptExecutor) this.driver;
         this.setbrowsername(browser);
     }

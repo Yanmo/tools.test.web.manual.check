@@ -27,7 +27,6 @@ public class PlatformUtils {
     public static List<String> getfilelist(File dir, String ext) throws Exception {
         List<String> flist = new ArrayList<String>();
         File[] files = dir.listFiles();
-        if (dir == null) { return new ArrayList<>(); }
         for (File file : files) {
             if (!file.exists()) {
                 continue;
