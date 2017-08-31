@@ -27,6 +27,9 @@ public class CaptureWebDriver {
     
     public void getWebPageCapture(WebDriver driver, URL pageurl, URL resulturl, String js, HashMap<String, String> options) throws Exception {
 
+    	
+        CaptureOptions cap = new CaptureOptions();
+
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
         File result = new File(resulturl.getPath());
         Thread.sleep(100);
