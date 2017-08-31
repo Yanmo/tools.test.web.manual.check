@@ -37,7 +37,6 @@ import ru.yandex.qatools.ashot.shooting.*;
 //custom library
 import org.seeek.util.*;
 
-import com.gargoylesoftware.htmlunit.javascript.configuration.BrowserName;;
 
 public class WebPageCapture {
     // constants
@@ -51,47 +50,30 @@ public class WebPageCapture {
     private HashMap<String, String> done = new HashMap<String, String>();
     private HashMap<String, WebElement> yet = new HashMap<String, WebElement>();
     private Screenshot screenshot = null;
-    private File save;
-    private URL dest;
-    private URL remote;
-    private String capturebrowser;
-    private String driverpath;
-    private String lang;
-    private String js;
 
+    // for command line args
+    private CaptureCommandLine args;
+    public String curbrowser;
+    public String js;
+    
     // for selenium web driver
     private WebDriver driver;
     private JavascriptExecutor jsexcutor;
     private org.openqa.selenium.Dimension size;
 
-    public WebPageCapture(URL url, File save, String path, URL remote) {
-        this.dest = url;
-        this.save = save;
-        this.driverpath = path;
-        this.remote = remote;
-        this.size = new org.openqa.selenium.Dimension(1024, 768);
+    public WebPageCapture(CaptureCommandLine args) {
+        this.args = args;
+        this.js = args.js;
     }
 
     public void captureWebPage(String browsername, URL url) throws Exception {
-        if(this.remote == null) { setWebDriver(browsername); } 
+        if(args.remote == null) { setWebDriver(browsername); } 
         else {setRemoteWebDriver(browsername);}
         getInternallinkList(url, this.yet, this.done);
         yet.clear();
         done.clear();
     }
 
-    public String getbrowsername() {
-        return this.capturebrowser;
-    }
-
-    public void setbrowsername(String name) {
-        this.capturebrowser = name;
-    }
-
-    public void setjs(String js) {
-    		this.js = js;
-    }
-    
     public void destroyWebDriver() {
         this.driver.quit();
         this.driver = null;
@@ -102,7 +84,7 @@ public class WebPageCapture {
 
         WebDriver driver = getWebDriver();
         driver.get(url.toString());
-        getWebPageCapture(driver, url, this.save);
+        CaptureWebDriver.getWebPagedCapture(driver, url, args.out);
         done.put(url.toString(), url.toString());
         System.out.println("captured -> " + url.toString());
 
