@@ -16,28 +16,25 @@ import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
 import org.seeek.util.*;
+import org.seeek.util.selenuim.web.capture.*;
 
-public class CaptureWebDriver {
+public class CaptureWebPage {
     
-    private Screenshot screenshot;
-
-    public CaptureWebDriver() {
+    public CaptureWebPage() {
         
     }
     
-    public void getWebPageCapture(WebDriver driver, URL pageurl, URL resulturl, String js, HashMap<String, String> options) throws Exception {
+    public static void getWebPageCapture(WebDriver driver, URL pageurl, URL resulturl, String js, CaptureOptions options) throws Exception {
 
-    	
-        CaptureOptions cap = new CaptureOptions();
-
+        driver.get(pageurl.toString());
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
         File result = new File(resulturl.getPath());
         Thread.sleep(100);
-        screenshot = options.get("browser").equals(WebPageCapture.SAFARI) ? 
+        Screenshot screenshot = options.getOptions("browser").toString().equals(WebPageCapture.SAFARI) ? 
                         new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
                         new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
-        String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.get("inext"),
-                "_" + options.get("browser") + "_" + options.get("lang") + options.get("outext"));
+        String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.getOptions("srcExt").toString(),
+                "_" + options.getOptions("browser").toString() + "_" + options.getOptions("lang").toString() + options.getOptions("destExt").toString());
         File savefilename = new File(result.getPath() + File.separator + filename);
         if (!result.exists()) result.mkdirs();
         ImageIO.write(screenshot.getImage(), "PNG", savefilename);

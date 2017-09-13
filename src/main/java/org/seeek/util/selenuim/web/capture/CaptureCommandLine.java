@@ -3,6 +3,7 @@ package org.seeek.util.selenuim.web.capture;
 import java.io.*;
 import java.util.*;
 import org.junit.Test;
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.WebDriver;
 
 import java.net.MalformedURLException;
@@ -33,13 +34,14 @@ public class CaptureCommandLine {
     
     private static final String br = System.getProperty("line.separator");
 
-    public List<String> browsers;
+    public List<String> browsers = new ArrayList<>();
     public URL dest;
     public URL out;
-    public URL driverpath;
+    public String driverpath;
     public URL remote;
     public String js;
     public String lang;
+    public Dimension size;
     
     public CaptureCommandLine(String[] args) throws ParseException, MalformedURLException, IOException {
         // create Options object
@@ -51,6 +53,8 @@ public class CaptureCommandLine {
         options.addOption("driver", true, "specific webdirver directory.");
         options.addOption("remote", true, "specific remote web server adoress.");
         options.addOption("js", true, "specific execute javascriot file.");
+        options.addOption("w", true, "specific window width.");
+        options.addOption("h", true, "specific window height.");
 
         // parse command-line args
         CommandLineParser cmdparser = new DefaultParser();
@@ -59,11 +63,14 @@ public class CaptureCommandLine {
         // generate options for capture web driver.
         dest = new URL(cmd.getOptionValue("i").toLowerCase());
         out = new URL(cmd.getOptionValue("o"));
-        browsers.addAll(Arrays.asList(cmd.getOptionValue("b").split(":", -1)));
+        browsers.addAll(Arrays.asList(cmd.getOptionValue("b").split(":")));
         lang = cmd.getOptionValue("l") == null ? "EN" : cmd.getOptionValue("l");
-        driverpath = cmd.getOptionValue("driver") == null ? null : new URL(cmd.getOptionValue("driver"));
+        driverpath = cmd.getOptionValue("driver") == null ? null : cmd.getOptionValue("driver");
         remote = cmd.getOptionValue("remote") == null ? null : new URL(cmd.getOptionValue("remote"));
-        js = cmd.getOptionValue("js") == null ? null : Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "");
+        js = cmd.getOptionValue("js") == null ? "" : Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "");
+        int height = cmd.getOptionValue("h") == null ? 768 : Integer.parseInt(cmd.getOptionValue("h").toString());
+        int width = cmd.getOptionValue("w") == null ? 1200 : Integer.parseInt(cmd.getOptionValue("w").toString());
+        size = new Dimension(width, height);
     }
     
 }

@@ -41,32 +41,35 @@ dependencies {
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
     
-	// https://mvnrepository.com/artifact/ru.yandex.qatools.ashot/ashot
-	compile group: 'ru.yandex.qatools.ashot', name: 'ashot', version: '1.5.4'
-	
-	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
-	compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.4.0'
+    // https://mvnrepository.com/artifact/ru.yandex.qatools.ashot/ashot
+    compile group: 'ru.yandex.qatools.ashot', name: 'ashot', version: '1.5.4'
+    
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '3.4.0'
 
-	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-server
-	compile group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '3.4.0'
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-server
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '3.4.0'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-chrome-driver
     compile group: 'org.seleniumhq.selenium', name: 'selenium-chrome-driver', version: '3.4.0'
 
-	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-firefox-driver
-	compile group: 'org.seleniumhq.selenium', name: 'selenium-firefox-driver', version: '3.4.0'
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-firefox-driver
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-firefox-driver', version: '3.4.0'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-ie-driver
     compile group: 'org.seleniumhq.selenium', name: 'selenium-ie-driver', version: '3.4.0'
 
-	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-safari-driver
-	compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
+    // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-safari-driver
+    compile group: 'org.seleniumhq.selenium', name: 'selenium-safari-driver', version: '3.4.0'
 
     // https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-edge-driver
     compile group: 'org.seleniumhq.selenium', name: 'selenium-edge-driver', version: '3.4.0'
 
-	// https://mvnrepository.com/artifact/commons-cli/commons-cli
-	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    // https://mvnrepository.com/artifact/commons-cli/commons-cli
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
+    
+    // jsoup HTML parser library @ https://jsoup.org/
+    compile 'org.jsoup:jsoup:1.10.3'
 }
 
 jar {

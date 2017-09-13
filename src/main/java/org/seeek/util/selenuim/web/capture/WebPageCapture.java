@@ -36,7 +36,12 @@ import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
 import org.seeek.util.*;
-
+import org.seeek.util.selenuim.*;
+import org.seeek.util.selenuim.web.*;
+import org.seeek.util.selenuim.web.capture.*;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 public class WebPageCapture {
     // constants
@@ -48,7 +53,7 @@ public class WebPageCapture {
     public static final String GECKO = "gecko";
 
     private HashMap<String, String> done = new HashMap<String, String>();
-    private HashMap<String, WebElement> yet = new HashMap<String, WebElement>();
+    private HashMap<String, Element> yet = new HashMap<String, Element>();
     private Screenshot screenshot = null;
 
     // for command line args
@@ -64,12 +69,14 @@ public class WebPageCapture {
     public WebPageCapture(CaptureCommandLine args) {
         this.args = args;
         this.js = args.js;
+        this.size = args.size;
     }
 
-    public void captureWebPage(String browsername, URL url) throws Exception {
+    public void captureWebPage(String browsername, URL url, CaptureOptions options) throws Exception {
         if(args.remote == null) { setWebDriver(browsername); } 
         else {setRemoteWebDriver(browsername);}
-        getInternallinkList(url, this.yet, this.done);
+        WebDriver driver = getWebDriver();
+        this.yet = getInternallinkList(driver, url, this.yet, this.done, options);
         yet.clear();
         done.clear();
     }
@@ -79,72 +86,56 @@ public class WebPageCapture {
         this.driver = null;
     }
 
-    public HashMap<String, WebElement> getInternallinkList(URL url, HashMap<String, WebElement> yet,
-            HashMap<String, String> done) throws Exception {
-
-        WebDriver driver = getWebDriver();
-        driver.get(url.toString());
-        CaptureWebDriver.getWebPagedCapture(driver, url, args.out);
+    public HashMap<String, Element> getInternallinkList(WebDriver driver, URL url, HashMap<String, Element> yet,
+            HashMap<String, String> done, CaptureOptions options) throws Exception {
+        CaptureWebPage.getWebPageCapture(driver, url, args.out, args.js, options);
         done.put(url.toString(), url.toString());
         System.out.println("captured -> " + url.toString());
+        Document doc = Jsoup.connect(url.toString()).get();
+        org.jsoup.select.Elements anchors = doc.select("a");
+        HashMap<String, Element> add = new HashMap<String, Element>();
 
-        List<WebElement> anchors = driver.findElements(By.tagName("a"));
-        HashMap<String, WebElement> add = new HashMap<String, WebElement>();
-        int anchorssize = anchors.size();
-        for (int i = 0; i < anchorssize; i++) {
-            String hreforg = anchors.get(i).getAttribute("href");
+        for (Element anchor : anchors) {
+            String hreforg = anchor.attr("abs:href");
             if (hreforg == null) continue;
             if (hreforg.isEmpty()) continue;
-            if (!anchors.get(i).isEnabled()) continue;
 
-            String[] uries = anchors.get(i).getAttribute("href").split("#");
+            String[] uries = hreforg.split("#");
             String href = uries[0];
 
+            if (href.length() == 0) continue;
             if (href.contains("javascript:")) continue;
             if (yet.containsKey(href)) continue;
             if (done.containsKey(href)) continue;
-            if (!this.dest.getHost().equals(new URL(href).getHost())) continue;
+            if (!this.args.dest.getHost().equals(new URL(href).getHost())) continue;
 
-            add.put(href, anchors.get(i));
+//            System.out.println( "check -> " + href);
+            add.put(href, anchor);
         }
         yet.remove(url.toString());
 
         if (add.size() != 0) {
-            yet.putAll(add);
-            Set<String> keys = yet.keySet();
-            for (int i = 0; i < keys.size(); i++) {
-                String key = keys.toArray(new String[0])[i];
-                URL targeturl = new URL(key);
-                yet = getInternallinkList(targeturl, add, done);
-            }
+          yet.putAll(add);
+          Set<String> keys = add.keySet();
+          for (int i = 0; i < keys.size(); i++) {
+              String key = keys.toArray(new String[0])[i];
+              URL targeturl = new URL(key);
+              yet = getInternallinkList(driver, targeturl, yet, done, options);
+          }
         }
         return yet;
     }
 
     private String getWebDriverPath(String drivername) throws Exception {
-        return this.driverpath + File.separator + drivername;
+        return this.args.driverpath + File.separator + drivername;
     }
 
     public void setWindowSize(org.openqa.selenium.Dimension size) throws Exception {
         this.driver.manage().window().setSize(size);
     }
     
-    public void getWebPageCapture(WebDriver driver, URL url, File savedir) throws Exception {
-
-        if (!this.js.isEmpty()) this.jsexcutor.executeScript(this.js);
-        Thread.sleep(100);
-        screenshot = this.getbrowsername().equals(WebPageCapture.SAFARI) ? 
-                        new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
-                        new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
-        String filename = Paths.get(url.getPath()).getFileName().toString().replaceAll("(.html|.htm)",
-                "_" + this.getbrowsername() + "_" + this.lang + ".png");
-        File savefilename = new File(savedir.getPath() + File.separator + filename);
-        if (!savedir.exists()) savedir.mkdirs();
-        ImageIO.write(screenshot.getImage(), "PNG", savefilename);
-    }
-
     public void setContentLanguage(String lang) throws Exception {
-        this.lang = lang;
+        this.args.lang = lang;
     }
 
     public void setWebDriver(String browser) throws Exception {
@@ -177,8 +168,10 @@ public class WebPageCapture {
             }
             break;
         }
+        this.driver.manage().window().setPosition(new Point(0, 0));
+        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.jsexcutor = (JavascriptExecutor) this.driver;
-        this.setbrowsername(browser);
+        this.curbrowser = browser;
     }
 
     public void setRemoteWebDriver(String browser) throws Exception {
@@ -211,12 +204,12 @@ public class WebPageCapture {
         default:
             break;
         }
-        RemoteWebDriver remoteDriver = new RemoteWebDriver(this.remote, capabilities);
+        RemoteWebDriver remoteDriver = new RemoteWebDriver(this.args.remote, capabilities);
         this.driver = remoteDriver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.jsexcutor = (JavascriptExecutor) this.driver;
-        this.setbrowsername(browser);
+        this.curbrowser = browser;
     }
 
     public WebDriver getWebDriver() {

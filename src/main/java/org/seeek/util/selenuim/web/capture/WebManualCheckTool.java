@@ -26,20 +26,22 @@ public class WebManualCheckTool {
     public static void main(String[] args) throws Exception {
 
         CaptureCommandLine cmdargs = new CaptureCommandLine(args);
-        
         WebPageCapture capture = new WebPageCapture(cmdargs);
+        CaptureOptions options = new CaptureOptions();
         
-            for (String browser : cmdargs.browsers) {
-                System.out.println("capture begin...." + browser);
-                try {
-                    capture.captureWebPage(browser, cmdargs.dest);
-                } catch (Exception e) {
-                    e.printStackTrace(System.err);
-                    capture.destroyWebDriver();
-                    throw e;
-                }
+        for (String browser : cmdargs.browsers) {
+            System.out.println("capture begin...." + browser);
+            options.setOptions("browser", browser);
+            options.setOptions("lang", cmdargs.lang);
+            try {
+                capture.captureWebPage(browser, cmdargs.dest, options);
+            } catch (Exception e) {
+                e.printStackTrace(System.err);
                 capture.destroyWebDriver();
+                throw e;
             }
+            capture.destroyWebDriver();
+        }
         System.out.println("capture finished!");
     }
 

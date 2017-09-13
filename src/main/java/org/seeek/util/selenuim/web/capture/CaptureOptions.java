@@ -30,8 +30,8 @@ public class CaptureOptions {
     			this.options.put(k, v);
     }
     
-    public void getOptions(String k) throws Exception {
-        this.options.get(k);
+    public Object getOptions(String k) throws Exception {
+        return this.options.get(k);
     }
 
 }
