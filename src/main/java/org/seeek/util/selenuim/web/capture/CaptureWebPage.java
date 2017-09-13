@@ -11,6 +11,11 @@ import org.junit.Test;
 import java.io.*;
 import java.nio.file.Paths;
 
+// for html parser library
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+
 // for selenuim library
 import org.openqa.selenium.*;
 import org.openqa.selenium.chrome.*;
@@ -36,9 +41,6 @@ import org.seeek.util.*;
 import org.seeek.util.selenuim.*;
 import org.seeek.util.selenuim.web.*;
 import org.seeek.util.selenuim.web.capture.*;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 
 public class CaptureWebPage {
     // constants
@@ -49,8 +51,8 @@ public class CaptureWebPage {
     public static final String SAFARI = "safari";
     public static final String GECKO = "gecko";
 
-    private HashMap<String, String> done = new HashMap<String, String>();
-    private HashMap<String, Element> yet = new HashMap<String, Element>();
+    private ArrayList<String> done = new ArrayList<String>();
+    private ArrayList<String> yet = new ArrayList<String>();
     private Screenshot screenshot = null;
 
     // for command line args
@@ -69,28 +71,32 @@ public class CaptureWebPage {
         this.size = args.size;
     }
 
-    public void captureWebPage(String browsername, URL url, CaptureOptions options) throws Exception {
+    public void doing(String browsername, URL url, CaptureOptions options) throws Exception {
         if(args.remote == null) { setWebDriver(browsername); } 
         else {setRemoteWebDriver(browsername);}
         WebDriver driver = getWebDriver();
-        this.yet = getInternallinkList(driver, url, this.yet, this.done, options);
+        List<String> targets = anlyzeLink(url, this.done, this.yet);
+        
+        for (int i = 0; i < targets.size(); i++) {
+            URL targeturl = new URL(targets.get(i));
+            getWebPageCapture(driver, targeturl, this.args.out, this.args.js, options);
+        }
         yet.clear();
         done.clear();
     }
 
-    public void destroyWebDriver() {
+    public void destroy() {
         this.driver.quit();
         this.driver = null;
     }
 
-    public HashMap<String, Element> getInternallinkList(WebDriver driver, URL url, HashMap<String, Element> yet,
-            HashMap<String, String> done, CaptureOptions options) throws Exception {
-        getWebPageCapture(driver, url, args.out, args.js, options);
-        done.put(url.toString(), url.toString());
-        System.out.println("captured -> " + url.toString());
+    public List<String> anlyzeLink(URL url, List<String> done, List<String> yet) throws Exception {
+        
         Document doc = Jsoup.connect(url.toString()).get();
         org.jsoup.select.Elements anchors = doc.select("a");
-        HashMap<String, Element> add = new HashMap<String, Element>();
+        done.add(url.toString());
+
+        List<String> add = new ArrayList<String>();
 
         for (Element anchor : anchors) {
             String hreforg = anchor.attr("abs:href");
@@ -102,27 +108,25 @@ public class CaptureWebPage {
 
             if (href.length() == 0) continue;
             if (href.contains("javascript:")) continue;
-            if (yet.containsKey(href)) continue;
-            if (done.containsKey(href)) continue;
+            if (yet.contains(href)) continue;
+            if (done.contains(href)) continue;
             if (!this.args.dest.getHost().equals(new URL(href).getHost())) continue;
 
 //            System.out.println( "check -> " + href);
-            add.put(href, anchor);
+            add.add(href.toString());
         }
         yet.remove(url.toString());
 
         if (add.size() != 0) {
-          yet.putAll(add);
-          Set<String> keys = add.keySet();
-          for (int i = 0; i < keys.size(); i++) {
-              String key = keys.toArray(new String[0])[i];
-              URL targeturl = new URL(key);
-              yet = getInternallinkList(driver, targeturl, yet, done, options);
+          yet.addAll(add);
+          for (int i = 0; i < add.size(); i++) {
+              URL addurl = new URL(add.get(i));
+              yet = anlyzeLink(addurl, yet, done);
           }
         }
         return yet;
     }
-
+    
     private String getWebDriverPath(String drivername) throws Exception {
         return this.args.driverpath + File.separator + drivername;
     }

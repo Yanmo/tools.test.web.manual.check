@@ -34,13 +34,13 @@ public class WebManualCheckTool {
             options.setOptions("browser", browser);
             options.setOptions("lang", cmdargs.lang);
             try {
-                capture.captureWebPage(browser, cmdargs.dest, options);
+                capture.doing(browser, cmdargs.dest, options);
             } catch (Exception e) {
                 e.printStackTrace(System.err);
-                capture.destroyWebDriver();
+                capture.destroy();
                 throw e;
             }
-            capture.destroyWebDriver();
+            capture.destroy();
         }
         System.out.println("capture finished!");
     }
