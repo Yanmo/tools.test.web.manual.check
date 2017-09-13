@@ -24,11 +24,8 @@ import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.safari.*;
 import org.openqa.selenium.safari.SafariDriver;
 import org.openqa.selenium.remote.*;
-import org.openqa.selenium.Platform;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
-import org.openqa.selenium.Dimension;
-
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
@@ -88,7 +85,7 @@ public class WebPageCapture {
 
     public HashMap<String, Element> getInternallinkList(WebDriver driver, URL url, HashMap<String, Element> yet,
             HashMap<String, String> done, CaptureOptions options) throws Exception {
-        CaptureWebPage.getWebPageCapture(driver, url, args.out, args.js, options);
+        getWebPageCapture(driver, url, args.out, args.js, options);
         done.put(url.toString(), url.toString());
         System.out.println("captured -> " + url.toString());
         Document doc = Jsoup.connect(url.toString()).get();
@@ -214,6 +211,22 @@ public class WebPageCapture {
 
     public WebDriver getWebDriver() {
         return this.driver;
+    }
+
+    public static void getWebPageCapture(WebDriver driver, URL pageurl, URL resulturl, String js, CaptureOptions options) throws Exception {
+
+        driver.get(pageurl.toString());
+        if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
+        File result = new File(resulturl.getPath());
+        Thread.sleep(100);
+        Screenshot screenshot = options.getOptions("browser").toString().equals(WebPageCapture.SAFARI) ? 
+                        new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
+                        new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
+        String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.getOptions("srcExt").toString(),
+                "_" + options.getOptions("browser").toString() + "_" + options.getOptions("lang").toString() + options.getOptions("destExt").toString());
+        File savefilename = new File(result.getPath() + File.separator + filename);
+        if (!result.exists()) result.mkdirs();
+        ImageIO.write(screenshot.getImage(), "PNG", savefilename);
     }
 
 }
