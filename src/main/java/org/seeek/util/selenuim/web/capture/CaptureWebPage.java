@@ -40,7 +40,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
-public class WebPageCapture {
+public class CaptureWebPage {
     // constants
     public static final String CHROME = "chrome";
     public static final String FIREFOX = "firefox";
@@ -63,7 +63,7 @@ public class WebPageCapture {
     private JavascriptExecutor jsexcutor;
     private org.openqa.selenium.Dimension size;
 
-    public WebPageCapture(CaptureCommandLine args) {
+    public CaptureWebPage(CaptureCommandLine args) {
         this.args = args;
         this.js = args.js;
         this.size = args.size;
@@ -219,7 +219,7 @@ public class WebPageCapture {
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
         File result = new File(resulturl.getPath());
         Thread.sleep(100);
-        Screenshot screenshot = options.getOptions("browser").toString().equals(WebPageCapture.SAFARI) ? 
+        Screenshot screenshot = options.getOptions("browser").toString().equals(CaptureWebPage.SAFARI) ? 
                         new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
                         new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
         String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.getOptions("srcExt").toString(),

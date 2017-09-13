@@ -26,7 +26,7 @@ public class WebManualCheckTool {
     public static void main(String[] args) throws Exception {
 
         CaptureCommandLine cmdargs = new CaptureCommandLine(args);
-        WebPageCapture capture = new WebPageCapture(cmdargs);
+        CaptureWebPage capture = new CaptureWebPage(cmdargs);
         CaptureOptions options = new CaptureOptions();
         
         for (String browser : cmdargs.browsers) {
