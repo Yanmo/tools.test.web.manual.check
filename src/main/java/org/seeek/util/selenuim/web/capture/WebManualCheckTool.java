@@ -25,23 +25,16 @@ public class WebManualCheckTool {
 
     public static void main(String[] args) throws Exception {
 
-        CaptureCommandLine cmdargs = new CaptureCommandLine(args);
-        CaptureWebPage capture = new CaptureWebPage(cmdargs);
-        CaptureOptions options = new CaptureOptions();
-        
-        for (String browser : cmdargs.browsers) {
-            System.out.println("capture begin...." + browser);
-            options.setOptions("browser", browser);
-            options.setOptions("lang", cmdargs.lang);
-            try {
-                capture.doing(browser, cmdargs.dest, options);
-            } catch (Exception e) {
-                e.printStackTrace(System.err);
-                capture.destroy();
-                throw e;
-            }
+        CaptureOptions options = new CaptureOptions(args);
+        CaptureWebPage capture = new CaptureWebPage(options);
+        try {
+            capture.start();
+        } catch (Exception e) {
+            e.printStackTrace(System.err);
             capture.destroy();
+            throw e;
         }
+        capture.destroy();
         System.out.println("capture finished!");
     }
 

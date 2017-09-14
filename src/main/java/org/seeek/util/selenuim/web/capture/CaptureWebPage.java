@@ -2,12 +2,10 @@ package org.seeek.util.selenuim.web.capture;
 
 import java.net.URL;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.imageio.*;
-import org.junit.Test;
 
+import java.awt.Toolkit;
 import java.io.*;
 import java.nio.file.Paths;
 
@@ -38,9 +36,6 @@ import ru.yandex.qatools.ashot.shooting.*;
 
 //custom library
 import org.seeek.util.*;
-import org.seeek.util.selenuim.*;
-import org.seeek.util.selenuim.web.*;
-import org.seeek.util.selenuim.web.capture.*;
 
 public class CaptureWebPage {
     // constants
@@ -56,7 +51,7 @@ public class CaptureWebPage {
     private Screenshot screenshot = null;
 
     // for command line args
-    private CaptureCommandLine args;
+    private CaptureOptions options;
     public String curbrowser;
     public String js;
     
@@ -65,24 +60,30 @@ public class CaptureWebPage {
     private JavascriptExecutor jsexcutor;
     private org.openqa.selenium.Dimension size;
 
-    public CaptureWebPage(CaptureCommandLine args) {
-        this.args = args;
-        this.js = args.js;
-        this.size = args.size;
+    public CaptureWebPage(CaptureOptions options) throws Exception {
+        this.options = options;
+        this.js = (String)options.getOptions(CaptureOptions.JS);
+        this.size = (Dimension)options.getOptions(CaptureOptions.WSIZE);
     }
 
-    public void doing(String browsername, URL url, CaptureOptions options) throws Exception {
-        if(args.remote == null) { setWebDriver(browsername); } 
-        else {setRemoteWebDriver(browsername);}
-        WebDriver driver = getWebDriver();
-        List<String> targets = anlyzeLink(url, this.done, this.yet);
+    public void start() throws Exception {
         
-        for (int i = 0; i < targets.size(); i++) {
-            URL targeturl = new URL(targets.get(i));
-            getWebPageCapture(driver, targeturl, this.args.out, this.args.js, options);
+        List<String> browsers = (List<String>)options.getOptions(CaptureOptions.BROWSER);
+        URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
+        URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
+        URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
+        String js = (String)options.getOptions(CaptureOptions.JS);
+
+        for (String browser : browsers) {
+            WebDriver driver = remote == null ? getWebDriver(browser): getRemoteWebDriver(browser);
+            List<String> anchors = anlyzeLink(srcUrl, this.done, this.yet);
+            for (String anchor : anchors) {
+                URL targeturl = new URL(anchor);
+                shooting(driver, targeturl, destUrl, js, options);
+            }
+            yet.clear();
+            done.clear();
         }
-        yet.clear();
-        done.clear();
     }
 
     public void destroy() {
@@ -93,6 +94,7 @@ public class CaptureWebPage {
     public List<String> anlyzeLink(URL url, List<String> done, List<String> yet) throws Exception {
         
         Document doc = Jsoup.connect(url.toString()).get();
+        URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         org.jsoup.select.Elements anchors = doc.select("a");
         done.add(url.toString());
 
@@ -110,7 +112,8 @@ public class CaptureWebPage {
             if (href.contains("javascript:")) continue;
             if (yet.contains(href)) continue;
             if (done.contains(href)) continue;
-            if (!this.args.dest.getHost().equals(new URL(href).getHost())) continue;
+            if (add.contains(href)) continue;
+            if (!srcUrl.getHost().equals(new URL(href).getHost())) continue;
 
 //            System.out.println( "check -> " + href);
             add.add(href.toString());
@@ -128,18 +131,14 @@ public class CaptureWebPage {
     }
     
     private String getWebDriverPath(String drivername) throws Exception {
-        return this.args.driverpath + File.separator + drivername;
+        return options.getOptions(CaptureOptions.DRIVERPATH) + File.separator + drivername;
     }
 
     public void setWindowSize(org.openqa.selenium.Dimension size) throws Exception {
         this.driver.manage().window().setSize(size);
     }
     
-    public void setContentLanguage(String lang) throws Exception {
-        this.args.lang = lang;
-    }
-
-    public void setWebDriver(String browser) throws Exception {
+    public WebDriver getWebDriver(String browser) throws Exception {
         switch (browser) {
         case "chrome":
             System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY,
@@ -165,6 +164,7 @@ public class CaptureWebPage {
             if (PlatformUtils.isMac()) {
                 SafariOptions options = new SafariOptions();
                 options.setUseTechnologyPreview(true);
+                options.setUseCleanSession(true);
                 this.driver = new SafariDriver(options);
             }
             break;
@@ -173,9 +173,10 @@ public class CaptureWebPage {
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.jsexcutor = (JavascriptExecutor) this.driver;
         this.curbrowser = browser;
+        return this.driver;
     }
 
-    public void setRemoteWebDriver(String browser) throws Exception {
+    public WebDriver getRemoteWebDriver(String browser) throws Exception {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         switch (browser) {
         case BrowserType.CHROME:
@@ -205,32 +206,42 @@ public class CaptureWebPage {
         default:
             break;
         }
-        RemoteWebDriver remoteDriver = new RemoteWebDriver(this.args.remote, capabilities);
+        RemoteWebDriver remoteDriver = new RemoteWebDriver((URL)options.getOptions(CaptureOptions.REMOTE), capabilities);
         this.driver = remoteDriver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.jsexcutor = (JavascriptExecutor) this.driver;
         this.curbrowser = browser;
-    }
-
-    public WebDriver getWebDriver() {
         return this.driver;
     }
 
-    public static void getWebPageCapture(WebDriver driver, URL pageurl, URL resulturl, String js, CaptureOptions options) throws Exception {
+    public void shooting(WebDriver driver, URL pageurl, URL resulturl, String js, CaptureOptions options) throws Exception {
 
         driver.get(pageurl.toString());
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
         File result = new File(resulturl.getPath());
         Thread.sleep(100);
-        Screenshot screenshot = options.getOptions("browser").toString().equals(CaptureWebPage.SAFARI) ? 
-                        new AShot().shootingStrategy(ShootingStrategies.scaling(1)).takeScreenshot(driver) :
-                        new AShot().shootingStrategy(ShootingStrategies.viewportPasting(100)).takeScreenshot(driver);
+        ShootingStrategy shootingConditions = getShootingConditions();
+        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
         String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.getOptions("srcExt").toString(),
-                "_" + options.getOptions("browser").toString() + "_" + options.getOptions("lang").toString() + options.getOptions("destExt").toString());
+                "_" + this.curbrowser + "_" + options.getOptions("lang").toString() + options.getOptions("destExt").toString());
         File savefilename = new File(result.getPath() + File.separator + filename);
         if (!result.exists()) result.mkdirs();
         ImageIO.write(screenshot.getImage(), "PNG", savefilename);
     }
+    
+    private ShootingStrategy getShootingConditions() {
+        
+        int scrollTimeout = 500;
+        int header = 0;
+        int footer = 0;
+        float scaling = 2.00f;
+        
+        ShootingStrategy shootingConditions = 
+                this.curbrowser.equals(CaptureWebPage.SAFARI) ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
+                                        ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
+        return shootingConditions;
+    }
 
+    
 }
