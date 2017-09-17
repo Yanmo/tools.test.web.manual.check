@@ -52,24 +52,15 @@ public class CaptureOptions {
     private static final String br = System.getProperty("line.separator");
 
     public CaptureOptions(String[] args) throws ParseException, MalformedURLException, IOException, Exception {
-        // create Options.
-        Options options = new Options();
-        options.addRequiredOption("i", "in", true, "specific input file.");
-        options.addRequiredOption("o", "out", true, "specific output directory.");
-        options.addRequiredOption("b", "browser", true, "specific browser name.");
-        options.addRequiredOption("l", "lang", true, "specific language");
-        options.addOption("driver", true, "specific webdirver directory.");
-        options.addOption("remote", true, "specific remote web server adoress.");
-        options.addOption("js", true, "specific execute javascriot file.");
-        options.addOption("w", true, "specific window width.");
-        options.addOption("h", true, "specific window height.");
 
-        // parse command-line args
-        CommandLineParser cmdparser = new DefaultParser();
-        CommandLine cmd = cmdparser.parse(options, args);
-        
+        // parse command line args,
+        CommandLine cmd = parseCommandlineOptions(args);
+        initCaptureOptions(cmd);
+    }
+    
+    private void initCaptureOptions(CommandLine cmd) throws Exception {
         // generate options for capture web driver.
-        setOptions(SRC_URL, new URL(cmd.getOptionValue("i").toLowerCase()));
+        setOptions(SRC_URL, new URL(cmd.getOptionValue("i")));
         setOptions(DEST_URL, new URL("file://" + cmd.getOptionValue("o")));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         
@@ -92,7 +83,26 @@ public class CaptureOptions {
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(DEST_EXT, DEFAULT_DEST_EXT);
+   }
     
+    private CommandLine parseCommandlineOptions (String[] args) throws Exception {
+        // create Options.
+        Options options = new Options();
+        options.addRequiredOption("i", "in", true, "specific input file.");
+        options.addRequiredOption("o", "out", true, "specific output directory.");
+        options.addRequiredOption("b", "browser", true, "specific browser name.");
+        options.addRequiredOption("l", "lang", true, "specific language");
+        options.addOption("driver", true, "specific webdirver directory.");
+        options.addOption("remote", true, "specific remote web server adoress.");
+        options.addOption("js", true, "specific execute javascriot file.");
+        options.addOption("w", true, "specific window width.");
+        options.addOption("h", true, "specific window height.");
+
+        // parse command-line args
+        CommandLineParser cmdparser = new DefaultParser();
+        CommandLine cmd = cmdparser.parse(options, args);
+        
+        return cmd;
     }
     
     public void setOptions(String k, Object v) throws Exception {
