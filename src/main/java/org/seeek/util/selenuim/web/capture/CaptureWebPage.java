@@ -9,6 +9,7 @@ import java.awt.Toolkit;
 import java.io.*;
 import java.nio.file.Paths;
 
+import org.apache.commons.io.FilenameUtils;
 // for html parser library
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -46,8 +47,6 @@ public class CaptureWebPage {
     public static final String SAFARI = "safari";
     public static final String GECKO = "gecko";
 
-    private ArrayList<String> done = new ArrayList<String>();
-    private ArrayList<String> yet = new ArrayList<String>();
     private Screenshot screenshot = null;
 
     // for command line args
@@ -73,31 +72,43 @@ public class CaptureWebPage {
         URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
         String js = (String)options.getOptions(CaptureOptions.JS);
+        
+        File result = new File(destUrl.getPath());
+        if (!result.exists()) result.mkdirs();
 
+        List<String> anchors = new ArrayList<String>();
+        anchors = anlyzeLink(srcUrl, anchors);
         for (String browser : browsers) {
             WebDriver driver = remote == null ? getWebDriver(browser): getRemoteWebDriver(browser);
-            List<String> anchors = anlyzeLink(srcUrl, this.done, this.yet);
             for (String anchor : anchors) {
                 URL targeturl = new URL(anchor);
-                shooting(driver, targeturl, destUrl, js, options);
+                File capfile = getCaptureFile(targeturl, this.options);
+                shootingAShot(driver, targeturl, capfile, js);
             }
-            yet.clear();
-            done.clear();
         }
     }
 
+    private File getCaptureFile(URL url, CaptureOptions options) throws Exception{
+        
+        String basename = FilenameUtils.getBaseName(url.getPath());
+        File capfile = new File(options.getOptions(CaptureOptions.DEST_URL).toString() + File.separator + basename + "_" + options.getOptions("lang").toString() + "_"
+                    + this.curbrowser + "_" + this.size.width + "x" + this.size.height +
+                     options.getOptions("destExt").toString());
+        return capfile;
+    }
+    
     public void destroy() {
         this.driver.quit();
         this.driver = null;
     }
 
-    public List<String> anlyzeLink(URL url, List<String> done, List<String> yet) throws Exception {
+    public List<String> anlyzeLink(URL url, List<String> checked) throws Exception {
         
         Document doc = Jsoup.connect(url.toString()).get();
         URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         org.jsoup.select.Elements anchors = doc.select("a");
-        done.add(url.toString());
 
+        System.out.println( "check -> " + url.toString());
         List<String> add = new ArrayList<String>();
 
         for (Element anchor : anchors) {
@@ -110,24 +121,20 @@ public class CaptureWebPage {
 
             if (href.length() == 0) continue;
             if (href.contains("javascript:")) continue;
-            if (yet.contains(href)) continue;
-            if (done.contains(href)) continue;
-            if (add.contains(href)) continue;
+            if (checked.contains(href)) continue;
             if (!srcUrl.getHost().equals(new URL(href).getHost())) continue;
 
-//            System.out.println( "check -> " + href);
             add.add(href.toString());
         }
-        yet.remove(url.toString());
 
         if (add.size() != 0) {
-          yet.addAll(add);
+            checked.addAll(add);
           for (int i = 0; i < add.size(); i++) {
               URL addurl = new URL(add.get(i));
-              yet = anlyzeLink(addurl, yet, done);
+              checked = anlyzeLink(addurl, add);
           }
         }
-        return yet;
+        return checked;
     }
     
     private String getWebDriverPath(String drivername) throws Exception {
@@ -202,7 +209,7 @@ public class CaptureWebPage {
             capabilities.setPlatform(Platform.MAC);
             capabilities.setBrowserName(BrowserType.SAFARI);
             capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
-            break;
+            break;     
         default:
             break;
         }
@@ -214,20 +221,15 @@ public class CaptureWebPage {
         this.curbrowser = browser;
         return this.driver;
     }
+   
+    public void shootingAShot(WebDriver driver, URL url, File save, String js) throws Exception {
 
-    public void shooting(WebDriver driver, URL pageurl, URL resulturl, String js, CaptureOptions options) throws Exception {
-
-        driver.get(pageurl.toString());
+        driver.get(url.toString());
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
-        File result = new File(resulturl.getPath());
         Thread.sleep(100);
         ShootingStrategy shootingConditions = getShootingConditions();
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
-        String filename = Paths.get(pageurl.getPath()).getFileName().toString().replaceAll(options.getOptions("srcExt").toString(),
-                "_" + this.curbrowser + "_" + options.getOptions("lang").toString() + options.getOptions("destExt").toString());
-        File savefilename = new File(result.getPath() + File.separator + filename);
-        if (!result.exists()) result.mkdirs();
-        ImageIO.write(screenshot.getImage(), "PNG", savefilename);
+        ImageIO.write(screenshot.getImage(), "PNG", save);
     }
     
     private ShootingStrategy getShootingConditions() {
