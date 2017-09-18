@@ -2,13 +2,8 @@ package org.seeek.util.selenuim.web.capture;
 
 import java.net.URL;
 import java.util.*;
-
 import javax.imageio.*;
-
-import java.awt.Toolkit;
 import java.io.*;
-import java.nio.file.Paths;
-
 import org.apache.commons.io.FilenameUtils;
 // for html parser library
 import org.jsoup.Jsoup;
@@ -47,8 +42,6 @@ public class CaptureWebPage {
     public static final String SAFARI = "safari";
     public static final String GECKO = "gecko";
 
-    private Screenshot screenshot = null;
-
     // for command line args
     private CaptureOptions options;
     public String curbrowser;
@@ -56,7 +49,6 @@ public class CaptureWebPage {
     
     // for selenium web driver
     private WebDriver driver;
-    private JavascriptExecutor jsexcutor;
     private org.openqa.selenium.Dimension size;
 
     public CaptureWebPage(CaptureOptions options) throws Exception {
@@ -67,7 +59,7 @@ public class CaptureWebPage {
 
     public void start() throws Exception {
         
-        List<String> browsers = (List<String>)options.getOptions(CaptureOptions.BROWSER);
+        List<String> browsers = Arrays.asList((String)options.getOptions(CaptureOptions.BROWSER));
         URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
@@ -178,7 +170,6 @@ public class CaptureWebPage {
         }
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-        this.jsexcutor = (JavascriptExecutor) this.driver;
         this.curbrowser = browser;
         return this.driver;
     }
@@ -217,7 +208,6 @@ public class CaptureWebPage {
         this.driver = remoteDriver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-        this.jsexcutor = (JavascriptExecutor) this.driver;
         this.curbrowser = browser;
         return this.driver;
     }

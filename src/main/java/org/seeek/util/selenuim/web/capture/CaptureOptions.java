@@ -2,23 +2,16 @@ package org.seeek.util.selenuim.web.capture;
 
 import java.io.*;
 import java.util.*;
-import org.junit.Test;
-import org.openqa.selenium.Dimension;
-import org.openqa.selenium.WebDriver;
-
 import java.net.MalformedURLException;
 import java.net.URL;
-
 import org.apache.commons.cli.Options;  
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
 
+import org.openqa.selenium.Dimension;
 import org.seeek.util.*;
-
-import com.sun.jna.Platform;
-
 
 public class CaptureOptions {
     
