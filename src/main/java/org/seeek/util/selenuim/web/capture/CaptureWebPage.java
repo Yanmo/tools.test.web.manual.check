@@ -59,7 +59,7 @@ public class CaptureWebPage {
 
     public void start() throws Exception {
         
-        List<String> browsers = Arrays.asList((String)options.getOptions(CaptureOptions.BROWSER));
+        List<String> browsers = (List<String>)options.getOptions(CaptureOptions.BROWSER);
         URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
@@ -97,7 +97,6 @@ public class CaptureWebPage {
     public List<String> anlyzeLink(URL url, List<String> checked) throws Exception {
         
         Document doc = Jsoup.connect(url.toString()).get();
-        URL srcUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         org.jsoup.select.Elements anchors = doc.select("a");
 
         System.out.println( "check -> " + url.toString());
@@ -114,7 +113,7 @@ public class CaptureWebPage {
             if (href.length() == 0) continue;
             if (href.contains("javascript:")) continue;
             if (checked.contains(href)) continue;
-            if (!srcUrl.getHost().equals(new URL(href).getHost())) continue;
+            if (!url.getHost().equals(new URL(href).getHost())) continue;
 
             add.add(href.toString());
         }
@@ -212,14 +211,14 @@ public class CaptureWebPage {
         return this.driver;
     }
    
-    public void shootingAShot(WebDriver driver, URL url, File save, String js) throws Exception {
+    public void shootingAShot(WebDriver driver, URL url, File file, String js) throws Exception {
 
         driver.get(url.toString());
         if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
-        Thread.sleep(100);
         ShootingStrategy shootingConditions = getShootingConditions();
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
-        ImageIO.write(screenshot.getImage(), "PNG", save);
+        Thread.sleep(100);
+        ImageIO.write(screenshot.getImage(), "PNG", file);
     }
     
     private ShootingStrategy getShootingConditions() {
