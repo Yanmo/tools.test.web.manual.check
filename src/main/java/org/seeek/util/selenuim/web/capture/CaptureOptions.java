@@ -54,7 +54,7 @@ public class CaptureOptions {
     private void initCaptureOptions(CommandLine cmd) throws Exception {
         // generate options for capture web driver.
         setOptions(SRC_URL, new URL(cmd.getOptionValue("i")));
-        setOptions(DEST_URL, new URL("file:" + cmd.getOptionValue("o")));
+        setOptions(DEST_URL, new URL("file://" + cmd.getOptionValue("o")));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         
         String lang = cmd.getOptionValue("l") == null ? "EN" : cmd.getOptionValue("l");

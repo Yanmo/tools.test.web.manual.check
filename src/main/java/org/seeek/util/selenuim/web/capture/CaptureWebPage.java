@@ -82,8 +82,9 @@ public class CaptureWebPage {
 
     private File getCaptureFile(URL url, CaptureOptions options) throws Exception{
         
+        URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         String basename = FilenameUtils.getBaseName(url.getPath());
-        File capfile = new File(options.getOptions(CaptureOptions.DEST_URL).toString() + File.separator + basename + "_" + options.getOptions("lang").toString() + "_"
+        File capfile = new File(destUrl.getPath() + File.separator + basename + "_" + options.getOptions("lang").toString() + "_"
                     + this.curbrowser + "_" + this.size.width + "x" + this.size.height +
                      options.getOptions("destExt").toString());
         return capfile;
