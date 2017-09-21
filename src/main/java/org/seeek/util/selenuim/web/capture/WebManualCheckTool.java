@@ -13,7 +13,6 @@ public class WebManualCheckTool {
             capture.destroy();
             throw e;
         }
-        capture.destroy();
         System.out.println("capture finished!");
     }
 

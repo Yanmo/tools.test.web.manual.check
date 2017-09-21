@@ -71,12 +71,13 @@ public class CaptureWebPage {
         List<String> anchors = new ArrayList<String>();
         anchors = anlyzeLink(srcUrl, anchors);
         for (String browser : browsers) {
-            WebDriver driver = remote == null ? getWebDriver(browser): getRemoteWebDriver(browser);
+            if (remote == null) { setWebDriver(browser);} else {setRemoteWebDriver(browser);}
             for (String anchor : anchors) {
                 URL targeturl = new URL(anchor);
                 File capfile = getCaptureFile(targeturl, this.options);
-                shootingAShot(driver, targeturl, capfile, js);
+                shootingAShot(this.driver, targeturl, capfile, js);
             }
+            destroy();
         }
     }
 
@@ -137,7 +138,7 @@ public class CaptureWebPage {
         this.driver.manage().window().setSize(size);
     }
     
-    public WebDriver getWebDriver(String browser) throws Exception {
+    public void setWebDriver(String browser) throws Exception {
         switch (browser) {
         case "chrome":
             System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY,
@@ -171,10 +172,9 @@ public class CaptureWebPage {
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.curbrowser = browser;
-        return this.driver;
     }
 
-    public WebDriver getRemoteWebDriver(String browser) throws Exception {
+    public void setRemoteWebDriver(String browser) throws Exception {
         DesiredCapabilities capabilities = new DesiredCapabilities();
         switch (browser) {
         case BrowserType.CHROME:
@@ -209,7 +209,6 @@ public class CaptureWebPage {
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
         this.curbrowser = browser;
-        return this.driver;
     }
    
     public void shootingAShot(WebDriver driver, URL url, File file, String js) throws Exception {
