@@ -36,6 +36,7 @@ public class CaptureOptions {
 	public static final String DRIVERPATH = "driverPath";
 	public static final String REMOTE = "remote";
 	public static final String WSIZE = "wsize";
+    public static final String SAFARIPREVIEW = "safaripreview";
     
     
 	private static final String DEFAULT_SRC_EXT = ".html";
@@ -73,6 +74,9 @@ public class CaptureOptions {
         int width = cmd.getOptionValue("w") == null ? DEFAULTWIDTH : Integer.parseInt(cmd.getOptionValue("w").toString());
         setOptions(WSIZE, new Dimension(width, height));
 
+        boolean safaripreview = cmd.getOptionValue("safaripreview") == null ? false : Boolean.valueOf(cmd.getOptionValue("safaripreview"));
+        setOptions(SAFARIPREVIEW, safaripreview);
+        
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(DEST_EXT, DEFAULT_DEST_EXT);
@@ -90,6 +94,7 @@ public class CaptureOptions {
         options.addOption("js", true, "specific execute javascriot file.");
         options.addOption("w", true, "specific window width.");
         options.addOption("h", true, "specific window height.");
+        options.addOption("safaripreview", true, "specific use or don't use safari preview version.");
 
         // parse command-line args
         CommandLineParser cmdparser = new DefaultParser();

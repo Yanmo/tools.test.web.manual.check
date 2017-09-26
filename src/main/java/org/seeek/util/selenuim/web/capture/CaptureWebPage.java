@@ -12,6 +12,7 @@ import org.jsoup.nodes.Element;
 
 // for selenuim library
 import org.openqa.selenium.*;
+import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.chrome.*;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.*;
@@ -85,9 +86,9 @@ public class CaptureWebPage {
         
         URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         String basename = FilenameUtils.getBaseName(url.getPath());
-        File capfile = new File(destUrl.getPath() + File.separator + basename + "_" + options.getOptions("lang").toString() + "_"
+        File capfile = new File(destUrl.getPath() + File.separator + basename + "_" + options.getOptions(CaptureOptions.LANG).toString() + "_"
                     + this.curbrowser + "_" + this.size.width + "x" + this.size.height +
-                     options.getOptions("destExt").toString());
+                     options.getOptions(CaptureOptions.DEST_EXT).toString());
         return capfile;
     }
     
@@ -162,10 +163,12 @@ public class CaptureWebPage {
             break;
         case "safari":
             if (PlatformUtils.isMac()) {
-                SafariOptions options = new SafariOptions();
-                options.setUseTechnologyPreview(true);
-                options.setUseCleanSession(true);
-                this.driver = new SafariDriver(options);
+                SafariOptions sOptions = new SafariOptions();
+                if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
+                    sOptions.setUseCleanSession(true);
+                    sOptions.setUseTechnologyPreview(true);
+                }
+                this.driver = new SafariDriver(sOptions);
             }
             break;
         }
@@ -195,8 +198,10 @@ public class CaptureWebPage {
             break;
         case BrowserType.SAFARI:
             SafariOptions sOptions = new SafariOptions();
-            sOptions.setUseCleanSession(true); // init a clean Safari session at all times
-            sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
+            if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
+                sOptions.setUseCleanSession(true); // init a clean Safari session at all times
+                sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
+            }
             capabilities.setPlatform(Platform.MAC);
             capabilities.setBrowserName(BrowserType.SAFARI);
             capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
@@ -223,7 +228,7 @@ public class CaptureWebPage {
     
     private ShootingStrategy getShootingConditions() {
         
-        int scrollTimeout = 500;
+        int scrollTimeout = 100;
         int header = 0;
         int footer = 0;
         float scaling = 2.00f;
