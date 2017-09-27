@@ -115,7 +115,9 @@ public class CaptureWebPage {
 
             if (href.length() == 0) continue;
             if (href.contains("javascript:")) continue;
+            if (href.contains(".pdf")) continue;
             if (checked.contains(href)) continue;
+            if (add.contains(href)) continue;
             if (!url.getHost().equals(new URL(href).getHost())) continue;
 
             add.add(href.toString());
@@ -125,7 +127,7 @@ public class CaptureWebPage {
             checked.addAll(add);
           for (int i = 0; i < add.size(); i++) {
               URL addurl = new URL(add.get(i));
-              checked = anlyzeLink(addurl, add);
+              checked = anlyzeLink(addurl, checked);
           }
         }
         return checked;
