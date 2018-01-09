@@ -133,8 +133,32 @@ public class CaptureWebPage {
         return checked;
     }
     
-    private String getWebDriverPath(String drivername) throws Exception {
-        return options.getOptions(CaptureOptions.DRIVERPATH) + File.separator + drivername;
+    private String getWebDriverPath() throws Exception {
+        String driverPath = options.getOptions(CaptureOptions.DRIVERPATH) + File.separator;
+        switch(this.curbrowser) {
+        case "chrome":
+            if (PlatformUtils.isWindows()) { driverPath += "chromedriver.exe"; }
+            else { driverPath += "chromedriver"; }
+            break;
+        case "firefox":
+            if (PlatformUtils.isWindows()) { driverPath += "geckodriver.exe"; }
+            else { driverPath += "geckodriver"; }
+            break;
+        case "ie":
+            if (PlatformUtils.isWindows()) { driverPath += "IEDriverServer.exe"; }
+            break;
+        case "edge":
+            if (PlatformUtils.isWindows()) { 
+                driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
+            }
+            break;
+        case "safari":
+            if (PlatformUtils.isMac()) {
+                driverPath = "";
+            }
+            break;
+        }
+        return driverPath;
     }
 
     public void setWindowSize(org.openqa.selenium.Dimension size) throws Exception {
@@ -142,26 +166,33 @@ public class CaptureWebPage {
     }
     
     public void setWebDriver(String browser) throws Exception {
+        this.curbrowser = browser;
+
         switch (browser) {
         case "chrome":
             System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY,
-                    this.getWebDriverPath("chromedriver.exe"));
+                    this.getWebDriverPath());
             this.driver = new ChromeDriver();
             break;
         case "firefox":
-            System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY, this.getWebDriverPath("geckodriver.exe"));
+            System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY,
+                    this.getWebDriverPath());
             FirefoxProfile ffprofiles = new FirefoxProfile();
             this.driver = new FirefoxDriver(ffprofiles);
             break;
         case "ie":
-            System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
-                    this.getWebDriverPath("IEDriverServer.exe"));
-            this.driver = new InternetExplorerDriver();
+            if (PlatformUtils.isWindows()) {
+                System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
+                        this.getWebDriverPath());
+                this.driver = new InternetExplorerDriver();
+            }
             break;
         case "edge":
-            System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
-                    "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe");
-            this.driver = new EdgeDriver();
+            if (PlatformUtils.isWindows()) {
+                System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
+                        this.getWebDriverPath());
+                this.driver = new EdgeDriver();
+            }
             break;
         case "safari":
             if (PlatformUtils.isMac()) {
@@ -176,7 +207,6 @@ public class CaptureWebPage {
         }
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-        this.curbrowser = browser;
     }
 
     public void setRemoteWebDriver(String browser) throws Exception {
