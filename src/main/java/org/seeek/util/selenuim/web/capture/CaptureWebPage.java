@@ -178,7 +178,7 @@ public class CaptureWebPage {
             System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY,
                     this.getWebDriverPath());
             FirefoxProfile ffprofiles = new FirefoxProfile();
-            this.driver = new FirefoxDriver(ffprofiles);
+            this.driver = new FirefoxDriver();
             break;
         case "ie":
             if (PlatformUtils.isWindows()) {
@@ -198,7 +198,7 @@ public class CaptureWebPage {
             if (PlatformUtils.isMac()) {
                 SafariOptions sOptions = new SafariOptions();
                 if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
-                    sOptions.setUseCleanSession(true);
+//                    sOptions.setUseCleanSession(true);
                     sOptions.setUseTechnologyPreview(true);
                 }
                 this.driver = new SafariDriver(sOptions);
@@ -231,7 +231,7 @@ public class CaptureWebPage {
         case BrowserType.SAFARI:
             SafariOptions sOptions = new SafariOptions();
             if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
-                sOptions.setUseCleanSession(true); // init a clean Safari session at all times
+//                sOptions.setUseCleanSession(true); // init a clean Safari session at all times
                 sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
             }
             capabilities.setPlatform(Platform.MAC);
