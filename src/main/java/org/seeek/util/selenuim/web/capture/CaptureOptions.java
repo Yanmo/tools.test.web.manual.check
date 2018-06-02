@@ -37,6 +37,8 @@ public class CaptureOptions {
 	public static final String REMOTE = "remote";
 	public static final String WSIZE = "wsize";
     public static final String SAFARIPREVIEW = "safaripreview";
+    public static final String PROXYHOST = "proxyhost";
+    public static final String PROXYPORT = "proxyport";
     
     
 	private static final String DEFAULT_SRC_EXT = ".html";
@@ -77,6 +79,13 @@ public class CaptureOptions {
         boolean safaripreview = cmd.getOptionValue("safaripreview") == null ? false : Boolean.valueOf(cmd.getOptionValue("safaripreview"));
         setOptions(SAFARIPREVIEW, safaripreview);
         
+        String proxyhost = cmd.getOptionValue("proxyhost") == null ? "" : cmd.getOptionValue("proxyhost");
+        setOptions(PROXYHOST, proxyhost);
+        System.setProperty("http.proxyHost", proxyhost);
+        String proxyport = cmd.getOptionValue("proxyport") == null ? "" : cmd.getOptionValue("proxyport");
+        setOptions(PROXYPORT, proxyport);
+        System.setProperty("http.proxyPort", proxyport);
+
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(DEST_EXT, DEFAULT_DEST_EXT);
@@ -95,6 +104,8 @@ public class CaptureOptions {
         options.addOption("w", true, "specific window width.");
         options.addOption("h", true, "specific window height.");
         options.addOption("safaripreview", true, "specific use or don't use safari preview version.");
+        options.addOption("proxyhost", true, "specific proxy host name.");
+        options.addOption("proxyport", true, "specific proxy port number.");
 
         // parse command-line args
         CommandLineParser cmdparser = new DefaultParser();
