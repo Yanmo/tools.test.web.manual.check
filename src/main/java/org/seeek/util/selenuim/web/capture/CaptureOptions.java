@@ -79,12 +79,16 @@ public class CaptureOptions {
         boolean safaripreview = cmd.getOptionValue("safaripreview") == null ? false : Boolean.valueOf(cmd.getOptionValue("safaripreview"));
         setOptions(SAFARIPREVIEW, safaripreview);
         
-        String proxyhost = cmd.getOptionValue("proxyhost") == null ? "" : cmd.getOptionValue("proxyhost");
+        String proxyhost = cmd.getOptionValue("proxyhost");
         setOptions(PROXYHOST, proxyhost);
-        System.setProperty("http.proxyHost", proxyhost);
-        String proxyport = cmd.getOptionValue("proxyport") == null ? "" : cmd.getOptionValue("proxyport");
-        setOptions(PROXYPORT, proxyport);
-        System.setProperty("http.proxyPort", proxyport);
+        if (proxyhost != null ) {
+            System.setProperty("http.proxyHost", proxyhost);
+        }
+        String proxyport = cmd.getOptionValue("proxyport");
+        setOptions(PROXYHOST, proxyport);
+        if (proxyport != null ) {
+            System.setProperty("http.proxyPort", proxyport);
+        }
 
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
