@@ -15,6 +15,12 @@ import org.seeek.util.*;
 
 public class CaptureOptions {
     
+    // platform 
+    public static final String WINDOWS = "windows";
+    public static final String MAC = "mac";
+    public static final String IOS = "ios";
+    public static final String ANDROID = "android";
+
     // constants for web driver.
     public static final String CHROME = "chrome";
     public static final String FIREFOX = "firefox";
@@ -22,6 +28,7 @@ public class CaptureOptions {
     public static final String EDGE = "edge";
     public static final String SAFARI = "safari";
     public static final String GECKO = "gecko";
+
     public static final Integer DEFAULTWIDTH = 1200;
     public static final Integer DEFAULTHEIGHT = 768;
     
@@ -39,7 +46,8 @@ public class CaptureOptions {
     public static final String SAFARIPREVIEW = "safaripreview";
     public static final String PROXYHOST = "proxyhost";
     public static final String PROXYPORT = "proxyport";
-    
+
+    public static final String PLATFORM = "platform";
     
 	private static final String DEFAULT_SRC_EXT = ".html";
 	private static final String DEFAULT_DEST_EXT = ".png";
@@ -59,6 +67,7 @@ public class CaptureOptions {
         setOptions(SRC_URL, new URL(cmd.getOptionValue("i")));
         setOptions(DEST_URL, new URL("file://" + cmd.getOptionValue("o")));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
+        setOptions(PLATFORM, cmd.getOptionValue("p"));
         
         String lang = cmd.getOptionValue("l") == null ? "EN" : cmd.getOptionValue("l");
         setOptions(LANG, lang);
@@ -102,6 +111,7 @@ public class CaptureOptions {
         options.addRequiredOption("o", "out", true, "specific output directory.");
         options.addRequiredOption("b", "browser", true, "specific browser name.");
         options.addRequiredOption("l", "lang", true, "specific language");
+        options.addRequiredOption("p", "platform", true, "specific use platform(win or mac).");
         options.addOption("driver", true, "specific webdirver directory.");
         options.addOption("remote", true, "specific remote web server adoress.");
         options.addOption("js", true, "specific execute javascriot file.");

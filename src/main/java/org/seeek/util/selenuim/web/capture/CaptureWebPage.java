@@ -5,6 +5,7 @@ import java.util.*;
 import javax.imageio.*;
 import java.io.*;
 import org.apache.commons.io.FilenameUtils;
+
 // for html parser library
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -27,6 +28,9 @@ import org.openqa.selenium.remote.*;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
+// for Mobile Devices library
+import io.appium.java_client.*;
+
 //for ashot library
 import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.shooting.*;
@@ -35,18 +39,13 @@ import ru.yandex.qatools.ashot.shooting.*;
 import org.seeek.util.*;
 
 public class CaptureWebPage {
-    // constants
-    public static final String CHROME = "chrome";
-    public static final String FIREFOX = "firefox";
-    public static final String IE = "ie";
-    public static final String EDGE = "edge";
-    public static final String SAFARI = "safari";
-    public static final String GECKO = "gecko";
 
     // for command line args
     private CaptureOptions options;
-    public String curbrowser;
+    public String curBrowserType;
     public String js;
+    public String curPlatform;
+    public DesiredCapabilities capabilities;
     
     // for selenium web driver
     private WebDriver driver;
@@ -56,6 +55,8 @@ public class CaptureWebPage {
         this.options = options;
         this.js = (String)options.getOptions(CaptureOptions.JS);
         this.size = (Dimension)options.getOptions(CaptureOptions.WSIZE);
+        this.capabilities = new DesiredCapabilities();
+        setPlatform((String)options.getOptions(CaptureOptions.PLATFORM));
     }
 
     public void start() throws Exception {
@@ -72,7 +73,8 @@ public class CaptureWebPage {
         List<String> anchors = new ArrayList<String>();
         anchors = anlyzeLink(srcUrl, anchors);
         for (String browser : browsers) {
-            if (remote == null) { setWebDriver(browser);} else {setRemoteWebDriver(browser);}
+            this.curBrowserType = browser;
+            if (remote == null) { setLocalWebDriver();} else {setRemoteWebDriver();}
             for (String anchor : anchors) {
                 URL targeturl = new URL(anchor);
                 File capfile = getCaptureFile(targeturl, this.options);
@@ -87,7 +89,7 @@ public class CaptureWebPage {
         URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
         String basename = FilenameUtils.getBaseName(url.getPath());
         File capfile = new File(destUrl.getPath() + File.separator + basename + "_" + options.getOptions(CaptureOptions.LANG).toString() + "_"
-                    + this.curbrowser + "_" + this.size.width + "x" + this.size.height +
+                    + this.curBrowserType + "_" + this.size.width + "x" + this.size.height +
                      options.getOptions(CaptureOptions.DEST_EXT).toString());
         return capfile;
     }
@@ -133,143 +135,191 @@ public class CaptureWebPage {
         return checked;
     }
     
-    private String getWebDriverPath() throws Exception {
-        String driverPath = options.getOptions(CaptureOptions.DRIVERPATH) + File.separator;
-        switch(this.curbrowser) {
-        case "chrome":
-            if (PlatformUtils.isWindows()) { driverPath += "chromedriver.exe"; }
-            else { driverPath += "chromedriver"; }
+    private void setBrowserType(String argBrowser) throws Exception {
+        switch(argBrowser) {
+        case CaptureOptions.CHROME:
+            this.curBrowserType = BrowserType.CHROME;
             break;
-        case "firefox":
-            if (PlatformUtils.isWindows()) { driverPath += "geckodriver.exe"; }
-            else { driverPath += "geckodriver"; }
+        case CaptureOptions.FIREFOX:
+            this.curBrowserType = BrowserType.FIREFOX;
             break;
-        case "ie":
-            if (PlatformUtils.isWindows()) { driverPath += "IEDriverServer.exe"; }
+        case CaptureOptions.IE:
+            this.curBrowserType = BrowserType.IE;
             break;
-        case "edge":
-            if (PlatformUtils.isWindows()) { 
-                driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
-            }
+        case CaptureOptions.EDGE:
+            this.curBrowserType = BrowserType.EDGE;
             break;
-        case "safari":
-            if (PlatformUtils.isMac()) {
-                driverPath = "";
-            }
+        case CaptureOptions.SAFARI:
+            this.curBrowserType = BrowserType.SAFARI;
             break;
         }
-        return driverPath;
     }
-
+    
+    private void setPlatform(String argPlatform) throws Exception {
+        switch(argPlatform) {
+        case "win":
+            this.curPlatform = CaptureOptions.WINDOWS;
+            break;
+        case "mac":
+            this.curPlatform = CaptureOptions.MAC;
+            break;
+        case "ios":
+            this.curPlatform = CaptureOptions.IOS;
+            break;
+        case "android":
+            this.curPlatform = CaptureOptions.ANDROID;
+            break;
+        }
+    }
+    
     public void setWindowSize(org.openqa.selenium.Dimension size) throws Exception {
         this.driver.manage().window().setSize(size);
     }
     
-    public void setWebDriver(String browser) throws Exception {
-        this.curbrowser = browser;
-
-        switch (browser) {
-        case "chrome":
+    public void setLocalWebDriver() throws Exception {
+        switch (this.curBrowserType) {
+        case BrowserType.CHROME:
             System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY,
-                    this.getWebDriverPath());
+                    getLocalWebDriverPath());
             this.driver = new ChromeDriver();
             break;
-        case "firefox":
+        case BrowserType.FIREFOX:
             System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY,
-                    this.getWebDriverPath());
+                    getLocalWebDriverPath());
             FirefoxProfile ffprofiles = new FirefoxProfile();
             this.driver = new FirefoxDriver();
             break;
-        case "ie":
-            if (PlatformUtils.isWindows()) {
-                System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
-                        this.getWebDriverPath());
-                this.driver = new InternetExplorerDriver();
-            }
+        case BrowserType.IE:
+            System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
+                    getLocalWebDriverPath());
+            this.driver = new InternetExplorerDriver();
             break;
-        case "edge":
-            if (PlatformUtils.isWindows()) {
-                System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
-                        this.getWebDriverPath());
-                this.driver = new EdgeDriver();
-            }
-            break;
-        case "safari":
-            if (PlatformUtils.isMac()) {
-                SafariOptions sOptions = new SafariOptions();
-                if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
-//                    sOptions.setUseCleanSession(true);
-                    sOptions.setUseTechnologyPreview(true);
-                }
-                this.driver = new SafariDriver(sOptions);
-            }
-            break;
-        }
-        this.driver.manage().window().setPosition(new Point(0, 0));
-        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-    }
-
-    public void setRemoteWebDriver(String browser) throws Exception {
-        DesiredCapabilities capabilities = new DesiredCapabilities();
-        switch (browser) {
-        case BrowserType.CHROME:
-            capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName(BrowserType.CHROME);
-            break;
-        case BrowserType.FIREFOX:
-            capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName(BrowserType.FIREFOX);
-            break;
-        case "ie":
-            capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName(BrowserType.IE);
-            break;
-        case "edge":
-            capabilities.setPlatform(Platform.WIN10);
-            capabilities.setBrowserName(BrowserType.EDGE);
+        case BrowserType.EDGE:
+            System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
+                    getLocalWebDriverPath());
+            this.driver = new EdgeDriver();
             break;
         case BrowserType.SAFARI:
             SafariOptions sOptions = new SafariOptions();
             if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
-//                sOptions.setUseCleanSession(true); // init a clean Safari session at all times
-                sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
+//                    sOptions.setUseCleanSession(true);
+                sOptions.setUseTechnologyPreview(true);
             }
-            capabilities.setPlatform(Platform.MAC);
-            capabilities.setBrowserName(BrowserType.SAFARI);
-            capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
-            break;     
-        default:
+            this.driver = new SafariDriver(sOptions);
             break;
         }
-        RemoteWebDriver remoteDriver = new RemoteWebDriver((URL)options.getOptions(CaptureOptions.REMOTE), capabilities);
+        this.driver.manage().window().setPosition(new Point(0, 0));
+        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+    }
+
+    private String getLocalWebDriverPath() throws Exception {
+        String driverPath = options.getOptions(CaptureOptions.DRIVERPATH) + File.separator;
+
+        if (Platform.WINDOWS) { // Windows
+            switch(this.curBrowserType) {
+            case BrowserType.CHROME:
+                driverPath += "chromedriver.exe";
+                break;
+            case BrowserType.FIREFOX:
+                driverPath += "geckodriver.exe";
+                break;
+            case BrowserType.IE:
+                driverPath += "IEDriverServer.exe";
+                break;
+            case BrowserType.EDGE:
+                driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
+                break;
+            }
+        } else if (Platform.MAC == this.curPlatform) { // Mac OS
+            switch(this.curBrowserType) {
+            case BrowserType.CHROME:
+                driverPath += "chromedriver";
+                break;
+            case BrowserType.FIREFOX:
+                driverPath += "geckodriver";
+                break;
+            case BrowserType.SAFARI:
+                break;
+            }
+        } else { // Other Platform
+            
+        }
+        return driverPath;
+    }
+
+    public void setRemoteWebDriver() throws Exception {
+        
+        getCapabilitiesByPlatform();
+        getCapabilitiesByBrowser();
+        URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
+        RemoteWebDriver remoteDriver = new RemoteWebDriver(remote, capabilities);
         this.driver = remoteDriver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-        this.curbrowser = browser;
-    }
-   
-    public void shootingAShot(WebDriver driver, URL url, File file, String js) throws Exception {
-
-        driver.get(url.toString());
-        if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
-        ShootingStrategy shootingConditions = getShootingConditions();
-        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
-        Thread.sleep(100);
-        ImageIO.write(screenshot.getImage(), "PNG", file);
     }
     
-    private ShootingStrategy getShootingConditions() {
-        
+    private void getCapabilitiesByBrowser() throws Exception {
+
+        capabilities.setBrowserName(this.curBrowserType);
+        switch (this.curBrowserType) {
+        case BrowserType.CHROME:
+            break;
+        case BrowserType.FIREFOX:
+            break;
+        case BrowserType.IE:
+            break;
+        case BrowserType.EDGE:
+            break;
+        case BrowserType.SAFARI:
+            SafariOptions sOptions = new SafariOptions();
+            sOptions.setUseCleanSession(true); // init a clean Safari session at all times
+            if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
+                sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
+            }
+            capabilities.setCapability(SafariOptions.CAPABILITY, sOptions);
+            break;
+        default:
+            break;
+        }
+    }
+    
+    private void getCapabilitiesByPlatform() throws Exception {
+
+        capabilities.setPlatform(this.curPlatform);
+        switch (this.curPlatform) {
+        case Platform.WINDOWS:
+            break;
+        case Platform.MAC:
+            break;
+        case Platform.IOS:
+            capabilities.setCapability("showXcodeLog", true);
+            capabilities.setCapability("platformName", "iOS");
+            capabilities.setCapability("deviceName", "iPhone 5s");
+            capabilities.setCapability("automationName", "XCUITest");
+            capabilities.setCapability("autoWebview", "true");
+            break;
+        case Platform.ANDROID:
+            break;
+        default:
+            break;
+        }
+    }
+    
+    public void shootingAShot(WebDriver driver, URL url, File file, String js) throws Exception {
+
         int scrollTimeout = 100;
         int header = 0;
         int footer = 0;
         float scaling = 2.00f;
         
+        driver.get(url.toString());
+        if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
         ShootingStrategy shootingConditions = 
-                this.curbrowser.equals(CaptureWebPage.SAFARI) ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
+                Platform.MAC == this.curPlatform ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
                                         ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
-        return shootingConditions;
+        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
+        Thread.sleep(100);
+        ImageIO.write(screenshot.getImage(), "PNG", file);
     }
 
-    
 }
