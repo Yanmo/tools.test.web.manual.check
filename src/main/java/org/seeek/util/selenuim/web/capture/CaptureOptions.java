@@ -94,7 +94,7 @@ public class CaptureOptions {
             System.setProperty("http.proxyHost", proxyhost);
         }
         String proxyport = cmd.getOptionValue("proxyport");
-        setOptions(PROXYHOST, proxyport);
+        setOptions(PROXYPORT, proxyport);
         if (proxyport != null ) {
             System.setProperty("http.proxyPort", proxyport);
         }

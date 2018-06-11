@@ -29,7 +29,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 // for Mobile Devices library
-import io.appium.java_client.*;
+//import io.appium.java_client.*;
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
@@ -42,14 +42,16 @@ public class CaptureWebPage {
 
     // for command line args
     private CaptureOptions options;
-    public String curBrowserType;
     public String js;
     public String curPlatform;
+    public String curBrowserType;
     public DesiredCapabilities capabilities;
     
     // for selenium web driver
     private WebDriver driver;
     private org.openqa.selenium.Dimension size;
+    private String proxyhost;
+    private int proxyport;
 
     public CaptureWebPage(CaptureOptions options) throws Exception {
         this.options = options;
@@ -57,6 +59,8 @@ public class CaptureWebPage {
         this.size = (Dimension)options.getOptions(CaptureOptions.WSIZE);
         this.capabilities = new DesiredCapabilities();
         setPlatform((String)options.getOptions(CaptureOptions.PLATFORM));
+        this.proxyhost = (String)options.getOptions(CaptureOptions.PROXYHOST);
+        this.proxyport = Integer.valueOf((String)options.getOptions(CaptureOptions.PROXYPORT));
     }
 
     public void start() throws Exception {
@@ -73,25 +77,29 @@ public class CaptureWebPage {
         List<String> anchors = new ArrayList<String>();
         anchors = anlyzeLink(srcUrl, anchors);
         for (String browser : browsers) {
-            this.curBrowserType = browser;
+            setBrowserType(browser);
             if (remote == null) { setLocalWebDriver();} else {setRemoteWebDriver();}
             for (String anchor : anchors) {
                 URL targeturl = new URL(anchor);
-                File capfile = getCaptureFile(targeturl, this.options);
-                shootingAShot(this.driver, targeturl, capfile, js);
+                String captureFileName = getCaptureFileName(targeturl);
+                File captureFile = new File(captureFileName);
+                shootingAShot(targeturl, captureFile);
             }
             destroy();
         }
     }
 
-    private File getCaptureFile(URL url, CaptureOptions options) throws Exception{
+    private String getCaptureFileName(URL url) throws Exception {
         
-        URL destUrl = (URL)options.getOptions(CaptureOptions.DEST_URL);
-        String basename = FilenameUtils.getBaseName(url.getPath());
-        File capfile = new File(destUrl.getPath() + File.separator + basename + "_" + options.getOptions(CaptureOptions.LANG).toString() + "_"
-                    + this.curBrowserType + "_" + this.size.width + "x" + this.size.height +
-                     options.getOptions(CaptureOptions.DEST_EXT).toString());
-        return capfile;
+        URL destUrl = (URL)this.options.getOptions(CaptureOptions.DEST_URL);
+//        String basename = FilenameUtils.getBaseName(url.getPath());
+        String basename = url.getPath().replace(".html", "").replace("/", "_");
+        String captureFileName = destUrl.getPath() + File.separator     //  parameter destination directory path
+                                 + basename + "_"                       //  base name from url
+                                 + this.curBrowserType + "_"                                    //  browser name
+                                 + this.size.width + "x" + this.size.height                     //  size
+                                 + options.getOptions(CaptureOptions.DEST_EXT).toString();      //  extension
+        return captureFileName;
     }
     
     public void destroy() {
@@ -101,7 +109,9 @@ public class CaptureWebPage {
 
     public List<String> anlyzeLink(URL url, List<String> checked) throws Exception {
         
-        Document doc = Jsoup.connect(url.toString()).get();
+        Document doc = (this.proxyhost != null  && this.proxyport != 0) 
+                ? Jsoup.connect(url.toString()).proxy(this.proxyhost,this.proxyport).get() 
+                : Jsoup.connect(url.toString()).get();
         org.jsoup.select.Elements anchors = doc.select("a");
 
         System.out.println( "check -> " + url.toString());
@@ -136,6 +146,7 @@ public class CaptureWebPage {
     }
     
     private void setBrowserType(String argBrowser) throws Exception {
+
         switch(argBrowser) {
         case CaptureOptions.CHROME:
             this.curBrowserType = BrowserType.CHROME;
@@ -215,7 +226,7 @@ public class CaptureWebPage {
     private String getLocalWebDriverPath() throws Exception {
         String driverPath = options.getOptions(CaptureOptions.DRIVERPATH) + File.separator;
 
-        if (Platform.WINDOWS) { // Windows
+        if (CaptureOptions.WINDOWS == this.curPlatform) { // Windows
             switch(this.curBrowserType) {
             case BrowserType.CHROME:
                 driverPath += "chromedriver.exe";
@@ -230,7 +241,7 @@ public class CaptureWebPage {
                 driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
                 break;
             }
-        } else if (Platform.MAC == this.curPlatform) { // Mac OS
+        } else if (CaptureOptions.MAC == this.curPlatform) { // Mac OS
             switch(this.curBrowserType) {
             case BrowserType.CHROME:
                 driverPath += "chromedriver";
@@ -241,6 +252,10 @@ public class CaptureWebPage {
             case BrowserType.SAFARI:
                 break;
             }
+        } else if (CaptureOptions.IOS == this.curPlatform) { // iOS
+            
+        } else if (CaptureOptions.ANDROID == this.curPlatform) { // Android
+            
         } else { // Other Platform
             
         }
@@ -272,7 +287,7 @@ public class CaptureWebPage {
             break;
         case BrowserType.SAFARI:
             SafariOptions sOptions = new SafariOptions();
-            sOptions.setUseCleanSession(true); // init a clean Safari session at all times
+//            sOptions.setUseCleanSession(true); // init a clean Safari session at all times
             if((boolean)options.getOptions(CaptureOptions.SAFARIPREVIEW)) {
                 sOptions.setUseTechnologyPreview(true); // enable Technology Preview Version
             }
@@ -285,39 +300,42 @@ public class CaptureWebPage {
     
     private void getCapabilitiesByPlatform() throws Exception {
 
-        capabilities.setPlatform(this.curPlatform);
         switch (this.curPlatform) {
-        case Platform.WINDOWS:
+        case CaptureOptions.WINDOWS:
+            capabilities.setPlatform(Platform.WINDOWS);
             break;
-        case Platform.MAC:
+        case CaptureOptions.MAC:
+            capabilities.setPlatform(Platform.MAC);
             break;
-        case Platform.IOS:
+        case CaptureOptions.IOS:
+            capabilities.setPlatform(Platform.IOS);
             capabilities.setCapability("showXcodeLog", true);
             capabilities.setCapability("platformName", "iOS");
             capabilities.setCapability("deviceName", "iPhone 5s");
             capabilities.setCapability("automationName", "XCUITest");
             capabilities.setCapability("autoWebview", "true");
             break;
-        case Platform.ANDROID:
+        case CaptureOptions.ANDROID:
+            capabilities.setPlatform(Platform.ANDROID);
             break;
         default:
             break;
         }
     }
     
-    public void shootingAShot(WebDriver driver, URL url, File file, String js) throws Exception {
+    public void shootingAShot(URL url, File file) throws Exception {
 
         int scrollTimeout = 100;
         int header = 0;
         int footer = 0;
         float scaling = 2.00f;
         
-        driver.get(url.toString());
-        if (!js.isEmpty()) ((JavascriptExecutor) driver).executeScript(js);
+        this.driver.get(url.toString());
+        if (!js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
         ShootingStrategy shootingConditions = 
-                Platform.MAC == this.curPlatform ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
+                (CaptureOptions.MAC == this.curPlatform || CaptureOptions.IOS == this.curPlatform) ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
                                         ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
-        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(driver);
+        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
         Thread.sleep(100);
         ImageIO.write(screenshot.getImage(), "PNG", file);
     }
