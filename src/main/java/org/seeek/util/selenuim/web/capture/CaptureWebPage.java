@@ -29,7 +29,10 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 // for Mobile Devices library
-//import io.appium.java_client.*;
+import io.appium.java_client.AppiumDriver;
+import io.appium.java_client.MobileElement;
+import io.appium.java_client.android.AndroidDriver;
+import io.appium.java_client.ios.IOSDriver;
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
@@ -59,8 +62,10 @@ public class CaptureWebPage {
         this.size = (Dimension)options.getOptions(CaptureOptions.WSIZE);
         this.capabilities = new DesiredCapabilities();
         setPlatform((String)options.getOptions(CaptureOptions.PLATFORM));
-        this.proxyhost = (String)options.getOptions(CaptureOptions.PROXYHOST);
-        this.proxyport = Integer.valueOf((String)options.getOptions(CaptureOptions.PROXYPORT));
+        if (options.getOptions(CaptureOptions.PROXYHOST) != null && options.getOptions(CaptureOptions.PROXYPORT) != null) {
+            this.proxyhost = (String)options.getOptions(CaptureOptions.PROXYHOST);
+            this.proxyport = Integer.valueOf((String)options.getOptions(CaptureOptions.PROXYPORT));
+        }
     }
 
     public void start() throws Exception {
@@ -78,7 +83,7 @@ public class CaptureWebPage {
         anchors = anlyzeLink(srcUrl, anchors);
         for (String browser : browsers) {
             setBrowserType(browser);
-            if (remote == null) { setLocalWebDriver();} else {setRemoteWebDriver();}
+            if (remote == null) { setLocalWebDriver();} else { setRemoteWebDriver();}
             for (String anchor : anchors) {
                 URL targeturl = new URL(anchor);
                 String captureFileName = getCaptureFileName(targeturl);
@@ -266,8 +271,32 @@ public class CaptureWebPage {
         
         getCapabilitiesByPlatform();
         getCapabilitiesByBrowser();
+
         URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
-        RemoteWebDriver remoteDriver = new RemoteWebDriver(remote, capabilities);
+        WebDriver remoteDriver;
+        switch (this.curPlatform) {
+        case CaptureOptions.WINDOWS:
+            capabilities.setPlatform(Platform.WINDOWS);
+            remoteDriver = new RemoteWebDriver(remote, capabilities);
+            this.driver = remoteDriver;
+            break;
+        case CaptureOptions.MAC:
+            capabilities.setPlatform(Platform.MAC);
+            remoteDriver = new RemoteWebDriver(remote, capabilities);
+            break;
+        case CaptureOptions.IOS:
+            AppiumDriver<MobileElement> iOSDriver = new IOSDriver<>(remote, capabilities);
+            remoteDriver = iOSDriver;
+            break;
+        case CaptureOptions.ANDROID:
+//            capabilities.setPlatform(Platform.ANDROID);
+            AppiumDriver<MobileElement> androidDriver = new AndroidDriver<>(remote, capabilities);
+            remoteDriver = androidDriver;
+            break;
+        default:
+            remoteDriver = new RemoteWebDriver(remote, capabilities);
+            break;
+        }
         this.driver = remoteDriver;
         this.driver.manage().window().setPosition(new Point(0, 0));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
@@ -308,7 +337,7 @@ public class CaptureWebPage {
             capabilities.setPlatform(Platform.MAC);
             break;
         case CaptureOptions.IOS:
-            capabilities.setPlatform(Platform.IOS);
+//            capabilities.setPlatform(Platform.IOS);
             capabilities.setCapability("showXcodeLog", true);
             capabilities.setCapability("platformName", "iOS");
             capabilities.setCapability("deviceName", "iPhone 5s");
@@ -316,7 +345,11 @@ public class CaptureWebPage {
             capabilities.setCapability("autoWebview", "true");
             break;
         case CaptureOptions.ANDROID:
-            capabilities.setPlatform(Platform.ANDROID);
+//            capabilities.setPlatform(Platform.ANDROID);
+            capabilities.setCapability("platformName", "Android");
+            capabilities.setCapability("platformVersion", "7.1.1");
+            capabilities.setCapability("deviceName", "Android Emulator");
+            capabilities.setCapability("browserName", "Chrome");
             break;
         default:
             break;
@@ -326,7 +359,7 @@ public class CaptureWebPage {
     public void shootingAShot(URL url, File file) throws Exception {
 
         int scrollTimeout = 100;
-        int header = 0;
+        int header = 70;
         int footer = 0;
         float scaling = 2.00f;
         
@@ -336,7 +369,7 @@ public class CaptureWebPage {
                 (CaptureOptions.MAC == this.curPlatform || CaptureOptions.IOS == this.curPlatform) ? ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
                                         ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
-        Thread.sleep(100);
+        Thread.sleep(1000);
         ImageIO.write(screenshot.getImage(), "PNG", file);
     }
 
