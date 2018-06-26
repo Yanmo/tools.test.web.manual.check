@@ -1,4 +1,4 @@
-package org.seeek.util.selenuim.web.capture;
+package org.seeek.util;
 
 import java.io.*;
 import java.util.*;
@@ -9,9 +9,6 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
-
-import org.openqa.selenium.Dimension;
-import org.seeek.util.*;
 
 public class CaptureOptions {
     
@@ -37,12 +34,13 @@ public class CaptureOptions {
     public static final String BROWSER = "browser";
     public static final String SRC_EXT = "srcExt";
     public static final String SRC_URL = "src";
-    public static final String DEST_URL = "dest";
-    public static final String DEST_EXT = "destExt";
+    public static final String SAVE_DIR = "savedir";
+    public static final String SAVE_EXT = "saveExt";
 	public static final String JS = "js";
-	public static final String DRIVERPATH = "driverPath";
+	public static final String DRIVERPATH = "driver";
 	public static final String REMOTE = "remote";
-	public static final String WSIZE = "wsize";
+    public static final String HEIGHT = "height";
+    public static final String WIDTH = "width";
     public static final String SAFARIPREVIEW = "safaripreview";
     public static final String PROXYHOST = "proxyhost";
     public static final String PROXYPORT = "proxyport";
@@ -50,13 +48,12 @@ public class CaptureOptions {
     public static final String PLATFORM = "platform";
     
 	private static final String DEFAULT_SRC_EXT = ".html";
-	private static final String DEFAULT_DEST_EXT = ".png";
+	private static final String DEFAULT_SAVE_EXT = ".png";
 
     private Map<String, Object> options = new HashMap<>();
     private static final String br = System.getProperty("line.separator");
 
     public CaptureOptions(String[] args) throws ParseException, MalformedURLException, IOException, Exception {
-
         // parse command line args,
         CommandLine cmd = parseCommandlineOptions(args);
         initCaptureOptions(cmd);
@@ -64,44 +61,26 @@ public class CaptureOptions {
     
     private void initCaptureOptions(CommandLine cmd) throws Exception {
         // generate options for capture web driver.
+        // required
         setOptions(SRC_URL, new URL(cmd.getOptionValue("i")));
-        setOptions(DEST_URL, new URL("file://" + cmd.getOptionValue("o")));
+        setOptions(SAVE_DIR, new URL("file://" + cmd.getOptionValue("o")));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         setOptions(PLATFORM, cmd.getOptionValue("p"));
-        
-        String lang = cmd.getOptionValue("l") == null ? "EN" : cmd.getOptionValue("l");
-        setOptions(LANG, lang);
-
-        String driverpath = cmd.getOptionValue("driver") == null ? null : cmd.getOptionValue("driver");
-        setOptions(DRIVERPATH, driverpath);
-        
-        URL remote = cmd.getOptionValue("remote") == null ? null : new URL(cmd.getOptionValue("remote"));
-        setOptions(REMOTE, remote);
-        
-        String js = cmd.getOptionValue("js") == null ? "" : Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "");
-        setOptions(JS, js);
-        
-        int height = cmd.getOptionValue("h") == null ? DEFAULTHEIGHT : Integer.parseInt(cmd.getOptionValue("h").toString());
-        int width = cmd.getOptionValue("w") == null ? DEFAULTWIDTH : Integer.parseInt(cmd.getOptionValue("w").toString());
-        setOptions(WSIZE, new Dimension(width, height));
-
-        boolean safaripreview = cmd.getOptionValue("safaripreview") == null ? false : Boolean.valueOf(cmd.getOptionValue("safaripreview"));
-        setOptions(SAFARIPREVIEW, safaripreview);
-        
-        String proxyhost = cmd.getOptionValue("proxyhost");
-        setOptions(PROXYHOST, proxyhost);
-        if (proxyhost != null ) {
-            System.setProperty("http.proxyHost", proxyhost);
-        }
-        String proxyport = cmd.getOptionValue("proxyport");
-        setOptions(PROXYPORT, proxyport);
-        if (proxyport != null ) {
-            System.setProperty("http.proxyPort", proxyport);
-        }
-
+        // optional
+        if (cmd.hasOption("l")) { setOptions(LANG, cmd.getOptionValue("l"));}
+        if (cmd.hasOption("driver")) { setOptions(DRIVERPATH, cmd.getOptionValue("driver"));}
+        if (cmd.hasOption("remote")) { setOptions(REMOTE, cmd.getOptionValue("remote")); }
+        if (cmd.hasOption("js")) { setOptions(JS, Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "")); }
+        if (cmd.hasOption("h")) { setOptions(HEIGHT, Integer.parseInt(cmd.getOptionValue("h").toString())); }
+            else {setOptions(HEIGHT, Integer.parseInt(cmd.getOptionValue("h").toString()));}
+        if (cmd.hasOption("w")) { setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("w").toString())); }
+            else {setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("h").toString()));}
+        if (cmd.hasOption("safaripreview")) { setOptions(SAFARIPREVIEW, Boolean.valueOf(cmd.getOptionValue("safaripreview")));}
+        if (cmd.hasOption("proxyhost")) { setOptions(PROXYHOST, cmd.getOptionValue("proxyhost")); }
+        if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, cmd.getOptionValue("proxyport")); }
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
-        setOptions(DEST_EXT, DEFAULT_DEST_EXT);
+        setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);
    }
     
     private CommandLine parseCommandlineOptions (String[] args) throws Exception {
@@ -128,8 +107,12 @@ public class CaptureOptions {
         return cmd;
     }
     
+    public boolean hasOptions(String key) throws Exception {
+        return this.options.containsKey(key);
+    }
+    
     public void setOptions(String k, Object v) throws Exception {
-    			this.options.put(k, v);
+        this.options.put(k, v);
     }
     
     public Object getOptions(String k) throws Exception {
