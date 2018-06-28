@@ -42,8 +42,8 @@ public class CaptureWebDriver {
     
     public CaptureWebDriver(CaptureOptions options) throws Exception {
         this.options = options;
-        this.js = (String)options.getOptions(CaptureOptions.JS);
-        this.size = (Dimension)options.getOptions(CaptureOptions.WSIZE);
+        this.js = options.hasOptions(CaptureOptions.JS) ? (String)options.getOptions(CaptureOptions.JS) : "";
+        this.size = new Dimension((int)options.getOptions(CaptureOptions.WIDTH), (int)options.getOptions(CaptureOptions.HEIGHT));
         this.capabilities = new DesiredCapabilities();
         setPlatform((String)options.getOptions(CaptureOptions.PLATFORM));
     }
@@ -196,12 +196,11 @@ public class CaptureWebDriver {
             capabilities.setCapability("platformName", "iOS");
             capabilities.setCapability("deviceName", "iPhone 5s");
             capabilities.setCapability("automationName", "XCUITest");
-            capabilities.setCapability("autoWebview", "true");
+            capabilities.setCapability("autoWebview", true);
             break;
         case CaptureOptions.ANDROID:
 //            capabilities.setPlatform(Platform.ANDROID);
             capabilities.setCapability("platformName", "Android");
-            capabilities.setCapability("platformVersion", "7.1.1");
             capabilities.setCapability("deviceName", "Android Emulator");
             capabilities.setCapability("browserName", "Chrome");
             break;
@@ -260,16 +259,16 @@ public class CaptureWebDriver {
     public void shootingAShot(URL url, File file) throws Exception {
 
         this.driver.get(url.toString());
-        if (!js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
+        if (!this.js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
         ShootingStrategy shootingConditions = getShootingAShotConditions();
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
-        Thread.sleep(1000);
-        ImageIO.write(screenshot.getImage(), "PNG", this.capture);
+        Thread.sleep(100);
+        ImageIO.write(screenshot.getImage(), "PNG", file);
     }
 
     private ShootingStrategy getShootingAShotConditions() throws Exception {
         int scrollTimeout = 100;
-        int header = 70;
+        int header = 0;
         int footer = 0;
         float scaling = 2.00f;
         ShootingStrategy shootingConditions = 

@@ -69,15 +69,18 @@ public class CaptureOptions {
         // optional
         if (cmd.hasOption("l")) { setOptions(LANG, cmd.getOptionValue("l"));}
         if (cmd.hasOption("driver")) { setOptions(DRIVERPATH, cmd.getOptionValue("driver"));}
-        if (cmd.hasOption("remote")) { setOptions(REMOTE, cmd.getOptionValue("remote")); }
+        if (cmd.hasOption("remote")) { setOptions(REMOTE, new URL(cmd.getOptionValue("remote"))); }
         if (cmd.hasOption("js")) { setOptions(JS, Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "")); }
         if (cmd.hasOption("h")) { setOptions(HEIGHT, Integer.parseInt(cmd.getOptionValue("h").toString())); }
-            else {setOptions(HEIGHT, Integer.parseInt(cmd.getOptionValue("h").toString()));}
+            else {setOptions(HEIGHT, DEFAULTHEIGHT);}
         if (cmd.hasOption("w")) { setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("w").toString())); }
-            else {setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("h").toString()));}
+            else {setOptions(WIDTH, DEFAULTWIDTH);}
         if (cmd.hasOption("safaripreview")) { setOptions(SAFARIPREVIEW, Boolean.valueOf(cmd.getOptionValue("safaripreview")));}
+            else {setOptions(SAFARIPREVIEW, false);}
         if (cmd.hasOption("proxyhost")) { setOptions(PROXYHOST, cmd.getOptionValue("proxyhost")); }
+        else {setOptions(PROXYHOST, "");}
         if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, cmd.getOptionValue("proxyport")); }
+        else {setOptions(PROXYPORT, 0);}
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);

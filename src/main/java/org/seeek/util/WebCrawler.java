@@ -16,9 +16,11 @@ public class WebCrawler {
     private Proxy proxy;
     private List<String> pagesUrl;
     
-    public WebCrawler(URL url, String proxyHost, int porxyPort) throws Exception {
-        siteUrl = url;
-        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, porxyPort));
+    public WebCrawler(CaptureOptions options) throws Exception {
+
+        siteUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
+        proxy = (options.hasOptions(CaptureOptions.PROXYHOST)) ? new Proxy(Proxy.Type.HTTP, new InetSocketAddress((String)options.getOptions(CaptureOptions.PROXYHOST), (int)options.getOptions(CaptureOptions.PROXYPORT)))
+                   : null;
     }
     
     public void start() throws Exception {
