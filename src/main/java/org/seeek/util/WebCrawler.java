@@ -33,7 +33,7 @@ public class WebCrawler {
     
     private List<String> crawl(URL url, List<String> checkedAnchors) throws Exception {
         
-        Document html = (proxy.address() != null) 
+        Document html = (proxy != null) 
                 ? Jsoup.connect(url.toString()).proxy(proxy).get() 
                 : Jsoup.connect(url.toString()).get();
         org.jsoup.select.Elements anchors = html.select("a");

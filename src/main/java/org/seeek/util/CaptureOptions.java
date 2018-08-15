@@ -78,9 +78,7 @@ public class CaptureOptions {
         if (cmd.hasOption("safaripreview")) { setOptions(SAFARIPREVIEW, Boolean.valueOf(cmd.getOptionValue("safaripreview")));}
             else {setOptions(SAFARIPREVIEW, false);}
         if (cmd.hasOption("proxyhost")) { setOptions(PROXYHOST, cmd.getOptionValue("proxyhost")); }
-        else {setOptions(PROXYHOST, "");}
         if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, cmd.getOptionValue("proxyport")); }
-        else {setOptions(PROXYPORT, 0);}
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);

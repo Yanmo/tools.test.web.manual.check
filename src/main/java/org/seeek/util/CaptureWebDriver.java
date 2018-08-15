@@ -3,6 +3,8 @@ package org.seeek.util;
 import java.net.URL;
 import java.util.*;
 import javax.imageio.*;
+
+import java.awt.image.BufferedImage;
 import java.io.*;
 import org.apache.commons.io.FilenameUtils;
 
@@ -24,6 +26,7 @@ import io.appium.java_client.ios.IOSDriver;
 
 //for ashot library
 import ru.yandex.qatools.ashot.*;
+import ru.yandex.qatools.ashot.coordinates.Coords;
 import ru.yandex.qatools.ashot.shooting.*;
 
 public class CaptureWebDriver {
@@ -152,8 +155,8 @@ public class CaptureWebDriver {
             break;
         }
         this.driver = remoteDriver;
-        this.driver.manage().window().setPosition(new Point(0, 0));
-        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+//        this.driver.manage().window().setPosition(new Point(0, 0));
+//        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
     }
     
     private void getCapabilitiesByBrowser() throws Exception {
@@ -199,9 +202,13 @@ public class CaptureWebDriver {
             capabilities.setCapability("autoWebview", true);
             break;
         case CaptureOptions.ANDROID:
-//            capabilities.setPlatform(Platform.ANDROID);
-            capabilities.setCapability("platformName", "Android");
+//            capabilities.setCapability("platformName", "Android");
             capabilities.setCapability("deviceName", "Android Emulator");
+            capabilities.setCapability("autoGrantPermissions", true);
+//            capabilities.setCapability("automationName", "UiAutomator");
+            capabilities.setCapability("clearSystemFiles", true);
+//            capabilities.setCapability("nativeWebScreenshot", false);
+//            capabilities.setCapability("autoWebview", true);
             capabilities.setCapability("browserName", "Chrome");
             break;
         default:
@@ -271,10 +278,23 @@ public class CaptureWebDriver {
         int header = 0;
         int footer = 0;
         float scaling = 2.00f;
-        ShootingStrategy shootingConditions = 
-                (CaptureOptions.MAC == this.curPlatform || CaptureOptions.IOS == this.curPlatform) ? 
-                    ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling):
-                    ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
+        ShootingStrategy shootingConditions = null;
+        switch(this.curPlatform) {
+        case CaptureOptions.IOS:
+            header = 71;
+            shootingConditions = ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling);
+            break;
+        case CaptureOptions.MAC:
+           shootingConditions = ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling);
+            break;
+        case CaptureOptions.ANDROID:
+            shootingConditions = ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
+            break;
+        case CaptureOptions.WINDOWS:
+            shootingConditions = ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
+            break;
+        }
+        
         return shootingConditions;
     }
     
