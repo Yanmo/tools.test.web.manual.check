@@ -1,5 +1,7 @@
 package org.seeek.util;
 
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
 import javax.imageio.*;
@@ -102,7 +104,7 @@ public class CaptureWebDriver {
                 driverPath += "IEDriverServer.exe";
                 break;
             case BrowserType.EDGE:
-                driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
+                driverPath += "MicrosoftWebDriver.exe";
                 break;
             }
         } else if (CaptureOptions.MAC == this.curPlatform) { // Mac OS
@@ -136,10 +138,13 @@ public class CaptureWebDriver {
         switch (this.curPlatform) {
         case CaptureOptions.WINDOWS:
             remoteDriver = new RemoteWebDriver(remote, capabilities);
-            this.driver = remoteDriver;
+            remoteDriver.manage().window().setPosition(new Point(0, 0));
+            remoteDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
             break;
         case CaptureOptions.MAC:
             remoteDriver = new RemoteWebDriver(remote, capabilities);
+            remoteDriver.manage().window().setPosition(new Point(0, 0));
+            remoteDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
             break;
         case CaptureOptions.IOS:
             AppiumDriver<MobileElement> iOSDriver = new IOSDriver<>(remote, capabilities);
@@ -155,8 +160,6 @@ public class CaptureWebDriver {
             break;
         }
         this.driver = remoteDriver;
-//        this.driver.manage().window().setPosition(new Point(0, 0));
-//        this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
     }
     
     private void getCapabilitiesByBrowser() throws Exception {
@@ -194,7 +197,6 @@ public class CaptureWebDriver {
             capabilities.setPlatform(Platform.MAC);
             break;
         case CaptureOptions.IOS:
-//            capabilities.setPlatform(Platform.IOS);
             capabilities.setCapability("showXcodeLog", true);
             capabilities.setCapability("platformName", "iOS");
             capabilities.setCapability("deviceName", "iPhone 5s");
@@ -202,14 +204,15 @@ public class CaptureWebDriver {
             capabilities.setCapability("autoWebview", true);
             break;
         case CaptureOptions.ANDROID:
-//            capabilities.setCapability("platformName", "Android");
+            capabilities.setCapability("platformName", "Android");
+            capabilities.setCapability("platformVersion", "8.1");
+            capabilities.setCapability("automationName", "UiAutomator2");
             capabilities.setCapability("deviceName", "Android Emulator");
+            capabilities.setCapability("browserName", "Chrome");
             capabilities.setCapability("autoGrantPermissions", true);
-//            capabilities.setCapability("automationName", "UiAutomator");
             capabilities.setCapability("clearSystemFiles", true);
 //            capabilities.setCapability("nativeWebScreenshot", false);
 //            capabilities.setCapability("autoWebview", true);
-            capabilities.setCapability("browserName", "Chrome");
             break;
         default:
             break;
@@ -288,6 +291,7 @@ public class CaptureWebDriver {
            shootingConditions = ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling);
             break;
         case CaptureOptions.ANDROID:
+            scrollTimeout = 1000;
             shootingConditions = ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
             break;
         case CaptureOptions.WINDOWS:

@@ -19,7 +19,7 @@ public class WebCrawler {
     public WebCrawler(CaptureOptions options) throws Exception {
 
         siteUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
-        proxy = (options.hasOptions(CaptureOptions.PROXYHOST)) ? new Proxy(Proxy.Type.HTTP, new InetSocketAddress((String)options.getOptions(CaptureOptions.PROXYHOST), (int)options.getOptions(CaptureOptions.PROXYPORT)))
+        proxy = (options.hasOptions(CaptureOptions.PROXYHOST)) ? new Proxy(Proxy.Type.HTTP, new InetSocketAddress((String)options.getOptions(CaptureOptions.PROXYHOST), Integer.valueOf(options.getOptions(CaptureOptions.PROXYPORT).toString())))
                    : null;
     }
     
