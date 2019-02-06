@@ -67,7 +67,7 @@ public class CaptureOptions {
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         setOptions(PLATFORM, cmd.getOptionValue("p"));
         // optional
-        if (cmd.hasOption("l")) { setOptions(LANG, cmd.getOptionValue("l"));}
+        if (cmd.hasOption("l")) { setOptions(LANG, cmd.getOptionValue("l").split(":"));}
         if (cmd.hasOption("driver")) { setOptions(DRIVERPATH, cmd.getOptionValue("driver"));}
         if (cmd.hasOption("remote")) { setOptions(REMOTE, new URL(cmd.getOptionValue("remote"))); }
         if (cmd.hasOption("js")) { setOptions(JS, Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "")); }

@@ -25,7 +25,7 @@ import io.appium.java_client.AppiumDriver;
 import io.appium.java_client.MobileElement;
 import io.appium.java_client.android.AndroidDriver;
 import io.appium.java_client.ios.IOSDriver;
-
+import io.appium.java_client.remote.MobileCapabilityType;
 //for ashot library
 import ru.yandex.qatools.ashot.*;
 import ru.yandex.qatools.ashot.coordinates.Coords;
@@ -34,14 +34,15 @@ import ru.yandex.qatools.ashot.shooting.*;
 public class CaptureWebDriver {
 
     // for command line args
-    private CaptureOptions options;
+    public CaptureOptions options;
     public String js;
     public String curPlatform;
     public String curBrowserType;
+    public String curLanguage;
     public DesiredCapabilities capabilities;
     
     // for selenium web driver
-    private WebDriver driver;
+    public WebDriver driver;
     private org.openqa.selenium.Dimension size;
     private File capture;
     
@@ -58,13 +59,17 @@ public class CaptureWebDriver {
         case BrowserType.CHROME:
             System.setProperty(ChromeDriverService.CHROME_DRIVER_EXE_PROPERTY,
                     getLocalWebDriverPath());
-            this.driver = new ChromeDriver();
+            ChromeOptions chromeOptions = new ChromeOptions();
+            chromeOptions.addArguments("--headless");
+            this.driver = new ChromeDriver(chromeOptions);
             break;
         case BrowserType.FIREFOX:
             System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY,
                     getLocalWebDriverPath());
             FirefoxProfile ffprofiles = new FirefoxProfile();
-            this.driver = new FirefoxDriver();
+            FirefoxOptions ffOptions = new FirefoxOptions();
+            ffOptions.addArguments("-headless");
+            this.driver = new FirefoxDriver(ffOptions);
             break;
         case BrowserType.IE:
             System.setProperty(InternetExplorerDriverService.IE_DRIVER_EXE_PROPERTY,
@@ -85,7 +90,9 @@ public class CaptureWebDriver {
             this.driver = new SafariDriver(sOptions);
             break;
         }
-        this.driver.manage().window().setPosition(new Point(0, 0));
+        int x = 10;
+        int y = 10;
+        this.driver.manage().window().setPosition(new Point(x, y));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
     }
 
@@ -134,32 +141,32 @@ public class CaptureWebDriver {
         getCapabilitiesByBrowser();
 
         URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
-        WebDriver remoteDriver;
         switch (this.curPlatform) {
         case CaptureOptions.WINDOWS:
-            remoteDriver = new RemoteWebDriver(remote, capabilities);
-            remoteDriver.manage().window().setPosition(new Point(0, 0));
-            remoteDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+            WebDriver remoteWinDriver = new RemoteWebDriver(remote, capabilities);
+            remoteWinDriver.manage().window().setPosition(new Point(0, 0));
+            remoteWinDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+            this.driver = remoteWinDriver;
             break;
         case CaptureOptions.MAC:
-            remoteDriver = new RemoteWebDriver(remote, capabilities);
-            remoteDriver.manage().window().setPosition(new Point(0, 0));
-            remoteDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+            WebDriver remoteMacDriver = new RemoteWebDriver(remote, capabilities);
+            remoteMacDriver.manage().window().setPosition(new Point(0, 0));
+            remoteMacDriver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+            this.driver = remoteMacDriver;
             break;
         case CaptureOptions.IOS:
-            AppiumDriver<MobileElement> iOSDriver = new IOSDriver<>(remote, capabilities);
-            remoteDriver = iOSDriver;
+            AppiumDriver remoteIOSDriver = new AppiumDriver(remote, capabilities);
+            this.driver = remoteIOSDriver;
             break;
         case CaptureOptions.ANDROID:
-//            capabilities.setPlatform(Platform.ANDROID);
-            AppiumDriver<MobileElement> androidDriver = new AndroidDriver<>(remote, capabilities);
-            remoteDriver = androidDriver;
+            AppiumDriver remoteAndroidDriver = new AppiumDriver(remote, capabilities);
+            this.driver = remoteAndroidDriver;
             break;
         default:
-            remoteDriver = new RemoteWebDriver(remote, capabilities);
+            WebDriver remoteDriver = new RemoteWebDriver(remote, capabilities);
+            this.driver = remoteDriver;
             break;
         }
-        this.driver = remoteDriver;
     }
     
     private void getCapabilitiesByBrowser() throws Exception {
@@ -197,22 +204,14 @@ public class CaptureWebDriver {
             capabilities.setPlatform(Platform.MAC);
             break;
         case CaptureOptions.IOS:
-            capabilities.setCapability("showXcodeLog", true);
-            capabilities.setCapability("platformName", "iOS");
-            capabilities.setCapability("deviceName", "iPhone 5s");
-            capabilities.setCapability("automationName", "XCUITest");
-            capabilities.setCapability("autoWebview", true);
+          capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
             break;
         case CaptureOptions.ANDROID:
-            capabilities.setCapability("platformName", "Android");
-            capabilities.setCapability("platformVersion", "8.1");
-            capabilities.setCapability("automationName", "UiAutomator2");
-            capabilities.setCapability("deviceName", "Android Emulator");
-            capabilities.setCapability("browserName", "Chrome");
-            capabilities.setCapability("autoGrantPermissions", true);
+            capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");
+            capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "4.3");
+            capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "Android Emulator");
+            capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Chrome");
             capabilities.setCapability("clearSystemFiles", true);
-//            capabilities.setCapability("nativeWebScreenshot", false);
-//            capabilities.setCapability("autoWebview", true);
             break;
         default:
             break;
@@ -276,6 +275,16 @@ public class CaptureWebDriver {
         ImageIO.write(screenshot.getImage(), "PNG", file);
     }
 
+    public void shootingAShotNow(File file) throws Exception {
+
+        if (!this.js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
+        ShootingStrategy shootingConditions = getShootingAShotConditions();
+        Thread.sleep(100);
+        Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
+        Thread.sleep(100);
+        ImageIO.write(screenshot.getImage(), "PNG", file);
+    }
+    
     private ShootingStrategy getShootingAShotConditions() throws Exception {
         int scrollTimeout = 100;
         int header = 0;
@@ -291,8 +300,7 @@ public class CaptureWebDriver {
            shootingConditions = ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling);
             break;
         case CaptureOptions.ANDROID:
-            scrollTimeout = 1000;
-            shootingConditions = ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
+            shootingConditions = ShootingStrategies.viewportRetina(scrollTimeout, header, footer, scaling);
             break;
         case CaptureOptions.WINDOWS:
             shootingConditions = ShootingStrategies.viewportNonRetina(scrollTimeout, header, footer);
@@ -308,7 +316,24 @@ public class CaptureWebDriver {
         this.shootingAShot(url, captureFile);
     }
 
-    private String getCaptureFileName(URL url) throws Exception {
+    public String getCaptureFileName(String testCaseName) throws Exception {
+        
+        URL saveDir = (URL)this.options.getOptions(CaptureOptions.SAVE_DIR);
+        String basename = testCaseName;
+        File dir = new File(saveDir.getPath() + File.separator + basename);
+        if (!dir.exists()) { dir.mkdirs(); }
+        String captureFileName = saveDir.getPath() + File.separator + basename + File.separator     //  parameter destination directory path
+                                 + basename + "_"                       //  base name from url
+                                 + this.curLanguage + "_"                       //  base name from url
+                                 + this.curPlatform + "_"                                    //  platform
+                                 + this.curBrowserType + "_"                                    //  browser name
+                                 + this.size.width + "x" + this.size.height                     //  size
+                                 + options.getOptions(CaptureOptions.SAVE_EXT).toString();      //  extension
+        System.out.println( "captured -> " + captureFileName);
+        return captureFileName;
+    }
+
+    public String getCaptureFileName(URL url) throws Exception {
         
         URL saveDir = (URL)this.options.getOptions(CaptureOptions.SAVE_DIR);
         String basename = url.getPath().replace(".html", "").replace("/", "_");
