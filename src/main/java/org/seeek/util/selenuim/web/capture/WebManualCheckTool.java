@@ -17,7 +17,7 @@ public class WebManualCheckTool {
             List<String> browsers = (List<String>)options.getOptions(CaptureOptions.BROWSER);
             URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
             for (String browser : browsers) {
-                cwd.setBrowserType(browser);
+                cwd.setBrowserType(browser); 
                 if (remote == null) { cwd.setLocalWebDriver();} else { cwd.setRemoteWebDriver();}
                 for (String url : pagesUrl) {
                     URL targeturl = new URL(url);
