@@ -38,6 +38,7 @@ public class CaptureWebDriver {
     public String js;
     public String curPlatform;
     public String curBrowserType;
+    public String curBrowserOptionType;
     public String curLanguage;
     public DesiredCapabilities capabilities;
     
@@ -204,7 +205,12 @@ public class CaptureWebDriver {
             capabilities.setPlatform(Platform.MAC);
             break;
         case CaptureOptions.IOS:
-          capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
+            capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
+            capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "12.1");
+            capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
+            capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "iPhone 6");
+            capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
+            capabilities.setCapability("clearSystemFiles", true);
             break;
         case CaptureOptions.ANDROID:
             capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");
@@ -241,6 +247,7 @@ public class CaptureWebDriver {
             this.curBrowserType = BrowserType.SAFARI;
             break;
         }
+        this.curBrowserOptionType = argBrowser;
     }
     
     private void setPlatform(String argPlatform) throws Exception {
@@ -326,7 +333,7 @@ public class CaptureWebDriver {
                                  + basename + "_"                       //  base name from url
                                  + this.curLanguage + "_"                       //  base name from url
                                  + this.curPlatform + "_"                                    //  platform
-                                 + this.curBrowserType + "_"                                    //  browser name
+                                 + this.curBrowserOptionType + "_"                                    //  browser name
                                  + this.size.width + "x" + this.size.height                     //  size
                                  + options.getOptions(CaptureOptions.SAVE_EXT).toString();      //  extension
         System.out.println( "captured -> " + captureFileName);
@@ -339,7 +346,7 @@ public class CaptureWebDriver {
         String basename = url.getPath().replace(".html", "").replace("/", "_");
         String captureFileName = saveDir.getPath() + File.separator     //  parameter destination directory path
                                  + basename + "_"                       //  base name from url
-                                 + this.curBrowserType + "_"                                    //  browser name
+                                 + this.curBrowserOptionType + "_"                                    //  browser name
                                  + this.size.width + "x" + this.size.height                     //  size
                                  + options.getOptions(CaptureOptions.SAVE_EXT).toString();      //  extension
         return captureFileName;

@@ -10,27 +10,21 @@ public class WebManualCheckTool {
 
         try {
             CaptureOptions options = new CaptureOptions(args);
-            CaptureWebDriver cwd = new CaptureWebDriver(options);
             WebCrawler wc = new WebCrawler(options);
             wc.start();
             List<String> pagesUrl = wc.getPagesUrl();
             List<String> browsers = (List<String>)options.getOptions(CaptureOptions.BROWSER);
-            URL remote = (URL)options.getOptions(CaptureOptions.REMOTE);
+
             for (String browser : browsers) {
-                cwd.setBrowserType(browser); 
-                if (remote == null) { cwd.setLocalWebDriver();} else { cwd.setRemoteWebDriver();}
-                for (String url : pagesUrl) {
-                    URL targeturl = new URL(url);
-                    cwd.capture(targeturl);
-                }
-                cwd.destroy();
+                CaptureWebDriverThread browserCapture =  new CaptureWebDriverThread(options, browser, pagesUrl);
+                browserCapture.start();
             }
+        
         } catch (Exception e) {
             e.printStackTrace(System.err);
 //            cwd.destroy();
             throw e;
         }
-        System.out.println("capture finished!");
     }
 
 }

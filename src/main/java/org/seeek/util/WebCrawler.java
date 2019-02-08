@@ -38,7 +38,6 @@ public class WebCrawler {
                     ? Jsoup.connect(url.toString()).proxy(proxy).get() 
                     : Jsoup.connect(url.toString()).get();
             org.jsoup.select.Elements anchors = html.select("a");
-    
             System.out.println( "check -> " + url.toString());
             List<String> addAnchors = new ArrayList<String>();
     
