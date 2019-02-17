@@ -1,4 +1,4 @@
-package org.seeek.util;
+package org.seeek.utilities.web;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

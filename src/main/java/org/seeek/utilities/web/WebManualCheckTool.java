@@ -1,8 +1,9 @@
-package org.seeek.util.selenuim.web.capture;
+package org.seeek.utilities.web;
 
-import org.seeek.util.*;
 import java.net.URL;
 import java.util.List;
+
+import org.seeek.utilities.web.*;
 
 public class WebManualCheckTool {
 

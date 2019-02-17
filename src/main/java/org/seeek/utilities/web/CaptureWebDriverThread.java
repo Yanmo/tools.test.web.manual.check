@@ -1,4 +1,4 @@
-package org.seeek.util;
+package org.seeek.utilities.web;
 
 import java.net.URL;
 import java.util.List;

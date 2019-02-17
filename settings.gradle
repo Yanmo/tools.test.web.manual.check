@@ -15,4 +15,4 @@ include 'api'
 include 'services:webservice'
 */
 
-rootProject.name = 'util.selenium.web-capture'
+rootProject.name = 'web.utilities'

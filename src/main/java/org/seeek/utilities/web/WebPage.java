@@ -1,17 +1,20 @@
-package org.seeek.util;
+package org.seeek.utilities.web;
 
 import java.net.URL;
 import java.util.*;
-import java.io.*;
 
-//custom library
-import org.seeek.util.*;
+import org.seeek.utilities.web.*;
+
+import java.io.*;
 
 public class WebPage {
 
     // for command line args
     
     private List<URL> anchors;
+    private List<URL> images;
+    private List<URL> css;
+    private List<URL> js;
     private File capture;
 
     public WebPage(URL url) throws Exception {
