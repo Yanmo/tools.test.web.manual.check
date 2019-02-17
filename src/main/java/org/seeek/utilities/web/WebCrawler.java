@@ -4,8 +4,10 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -31,6 +33,24 @@ public class WebCrawler {
         return pagesUrl;
     }
     
+    private Boolean checkAnchor(Element anchor) throws Exception {
+        
+        String allowProtcol[] = {"http", "https", "file"};
+        String allowExtension[] = {"html", "htm", "png", "jpeg", "jpg", "css", "woff", "js"};
+        
+        if (anchor.attr("abs:href") == null || anchor.attr("abs:href").isEmpty()) return false;
+
+        URL hrefUrl = new URL(anchor.attr("abs:href"));
+        String protocol = hrefUrl.getProtocol();
+        String extension = FilenameUtils.getExtension(hrefUrl.getPath());
+
+        if (!Arrays.asList(allowProtcol).contains(protocol)) return false;
+        if (!Arrays.asList(allowExtension).contains(extension)) return false;
+        if (!siteUrl.getHost().equals(hrefUrl.getHost())) return false;
+
+        return true;
+    }
+    
     private List<String> crawl(URL url, List<String> checkedAnchors) throws Exception {
         
         try {
@@ -42,21 +62,9 @@ public class WebCrawler {
             List<String> addAnchors = new ArrayList<String>();
     
             for (Element anchor : anchors) {
-                String hreforg = anchor.attr("abs:href");
-                if (hreforg == null) continue;
-                if (hreforg.isEmpty()) continue;
-    
-                String[] uries = hreforg.split("#");
-                String href = uries[0];
-    
-                if (href.length() == 0) continue;
-                if (href.contains("javascript:")) continue;
-                if (href.contains(".pdf")) continue;
-                if (checkedAnchors.contains(href)) continue;
-                if (addAnchors.contains(href)) continue;
-                if (!siteUrl.getHost().equals(new URL(href).getHost())) continue;
-    
-                addAnchors.add(href.toString());
+                if (!checkAnchor(anchor)) continue; 
+                String abshref = anchor.attr("abs:href").split("#")[0];
+                addAnchors.add(abshref);
             }
     
             if (addAnchors.size() != 0) {
