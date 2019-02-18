@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.seeek.utilities.web.*;
 
-public class WebManualCheckTool {
+public class CheckDisplayCollapse {
 
     public static void main(String[] args) throws Exception {
 
