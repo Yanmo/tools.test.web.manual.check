@@ -33,12 +33,16 @@ public class WebCrawler {
         return pagesUrl;
     }
     
-    private Boolean checkAnchor(Element anchor) throws Exception {
+    private Boolean checkAnchor(Element anchor, List<String> checkedAnchors, List<String> addAnchors) throws Exception {
         
         String allowProtcol[] = {"http", "https", "file"};
         String allowExtension[] = {"html", "htm", "png", "jpeg", "jpg", "css", "woff", "js"};
         
         if (anchor.attr("abs:href") == null || anchor.attr("abs:href").isEmpty()) return false;
+
+        String abshref = getUrlPath(anchor);
+        if (addAnchors.contains(abshref)) return false;
+        if (checkedAnchors.contains(abshref)) return false;
 
         URL hrefUrl = new URL(anchor.attr("abs:href"));
         String protocol = hrefUrl.getProtocol();
@@ -49,6 +53,11 @@ public class WebCrawler {
         if (!siteUrl.getHost().equals(hrefUrl.getHost())) return false;
 
         return true;
+    }
+    
+    private String getUrlPath(Element anchor) throws Exception {
+        URL hrefUrl = new URL(anchor.attr("abs:href"));
+        return hrefUrl.getProtocol() + "://" + hrefUrl.getHost() + hrefUrl.getPath();
     }
     
     private List<String> crawl(URL url, List<String> checkedAnchors) throws Exception {
@@ -62,9 +71,8 @@ public class WebCrawler {
             List<String> addAnchors = new ArrayList<String>();
     
             for (Element anchor : anchors) {
-                if (!checkAnchor(anchor)) continue; 
-                String abshref = anchor.attr("abs:href").split("#")[0];
-                addAnchors.add(abshref);
+                if (!checkAnchor(anchor, checkedAnchors, addAnchors)) continue; 
+                addAnchors.add(getUrlPath(anchor));
             }
     
             if (addAnchors.size() != 0) {

@@ -7,6 +7,8 @@ import java.io.*;
 
 public class WebSite {
 
+    private Map<String, Object> webSiteMap = new HashMap<>();
+
     public WebSite() {
 
     }
