@@ -17,12 +17,14 @@ public class WebCrawler {
     private URL siteUrl;
     private Proxy proxy;
     private List<String> pagesUrl;
+    private Boolean nestcrawl; 
     
     public WebCrawler(CaptureOptions options) throws Exception {
 
         siteUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
         proxy = (options.hasOptions(CaptureOptions.PROXYHOST)) ? new Proxy(Proxy.Type.HTTP, new InetSocketAddress((String)options.getOptions(CaptureOptions.PROXYHOST), Integer.valueOf(options.getOptions(CaptureOptions.PROXYPORT).toString())))
                    : null;
+        nestcrawl = (Boolean) options.getOptions(CaptureOptions.NEST);
     }
     
     public void start() throws Exception {
@@ -72,11 +74,13 @@ public class WebCrawler {
     
             for (Element anchor : anchors) {
                 if (!checkAnchor(anchor, checkedAnchors, addAnchors)) continue; 
-                addAnchors.add(getUrlPath(anchor));
+//                addAnchors.add(getUrlPath(anchor));
+              addAnchors.add(anchor.attr("abs:href"));
             }
     
             if (addAnchors.size() != 0) {
                 checkedAnchors.addAll(addAnchors);
+                if (!nestcrawl) {return checkedAnchors;}
                 for (int i = 0; i < addAnchors.size(); i++) {
                     URL addUrl = new URL(addAnchors.get(i));
                     checkedAnchors = crawl(addUrl, checkedAnchors);

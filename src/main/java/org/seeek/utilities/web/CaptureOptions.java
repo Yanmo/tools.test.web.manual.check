@@ -44,6 +44,7 @@ public class CaptureOptions {
     public static final String SAFARIPREVIEW = "safaripreview";
     public static final String PROXYHOST = "proxyhost";
     public static final String PROXYPORT = "proxyport";
+    public static final String NEST = "nest";
 
     public static final String PLATFORM = "platform";
     
@@ -79,6 +80,8 @@ public class CaptureOptions {
             else {setOptions(SAFARIPREVIEW, false);}
         if (cmd.hasOption("proxyhost")) { setOptions(PROXYHOST, cmd.getOptionValue("proxyhost")); }
         if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, cmd.getOptionValue("proxyport")); }
+        if (cmd.hasOption("nest")) { setOptions(NEST, Boolean.valueOf(cmd.getOptionValue("nest"))); } 
+            else {setOptions(NEST, true);}
         // no-arg constructor
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);
@@ -100,6 +103,7 @@ public class CaptureOptions {
         options.addOption("safaripreview", true, "specific use or don't use safari preview version.");
         options.addOption("proxyhost", true, "specific proxy host name.");
         options.addOption("proxyport", true, "specific proxy port number.");
+        options.addOption("nest", true, "specific nested link.");
 
         // parse command-line args
         CommandLineParser cmdparser = new DefaultParser();

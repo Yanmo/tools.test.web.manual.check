@@ -4,6 +4,8 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
+
 import javax.imageio.*;
 
 import java.awt.image.BufferedImage;
@@ -18,6 +20,7 @@ import org.openqa.selenium.firefox.*;
 import org.openqa.selenium.ie.*;
 import org.openqa.selenium.edge.*;
 import org.openqa.selenium.safari.*;
+import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.remote.*;
 
 // for Mobile Devices library
@@ -46,6 +49,8 @@ public class CaptureWebDriver {
     public WebDriver driver;
     private org.openqa.selenium.Dimension size;
     private File capture;
+    private WebDriverWait wait;
+
     
     public CaptureWebDriver(CaptureOptions options) throws Exception {
         this.options = options;
@@ -95,6 +100,8 @@ public class CaptureWebDriver {
         int y = 10;
         this.driver.manage().window().setPosition(new Point(x, y));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
+        this.driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
+        this.wait = new WebDriverWait(this.driver, 10);
     }
 
     private String getLocalWebDriverPath() throws Exception {
