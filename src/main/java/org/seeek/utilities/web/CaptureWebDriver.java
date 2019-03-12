@@ -83,8 +83,6 @@ public class CaptureWebDriver {
             this.driver = new InternetExplorerDriver();
             break;
         case BrowserType.EDGE:
-            System.setProperty(EdgeDriverService.EDGE_DRIVER_EXE_PROPERTY,
-                    getLocalWebDriverPath());
             this.driver = new EdgeDriver();
             break;
         case BrowserType.SAFARI:
@@ -119,7 +117,7 @@ public class CaptureWebDriver {
                 driverPath += "IEDriverServer.exe";
                 break;
             case BrowserType.EDGE:
-                driverPath += "MicrosoftWebDriver.exe";
+                driverPath = "C:\\Program Files (x86)\\Microsoft Web Driver\\MicrosoftWebDriver.exe";
                 break;
             }
         } else if (CaptureOptions.MAC == this.curPlatform) { // Mac OS
@@ -213,18 +211,9 @@ public class CaptureWebDriver {
             break;
         case CaptureOptions.IOS:
             capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "iOS");
-            capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "12.1");
-            capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Safari");
-            capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "iPhone 6");
-            capabilities.setCapability(MobileCapabilityType.AUTOMATION_NAME, "XCUITest");
-            capabilities.setCapability("clearSystemFiles", true);
             break;
         case CaptureOptions.ANDROID:
             capabilities.setCapability(MobileCapabilityType.PLATFORM_NAME, "Android");
-            capabilities.setCapability(MobileCapabilityType.PLATFORM_VERSION, "4.3");
-            capabilities.setCapability(MobileCapabilityType.DEVICE_NAME, "Android Emulator");
-            capabilities.setCapability(MobileCapabilityType.BROWSER_NAME, "Chrome");
-            capabilities.setCapability("clearSystemFiles", true);
             break;
         default:
             break;

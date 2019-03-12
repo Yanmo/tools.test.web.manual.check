@@ -10,7 +10,7 @@
 apply plugin: 'java-library'
 apply plugin: "maven"
 
-version=0.1
+version=0.2
 
 // In this section you declare where to find the dependencies of your project
 repositories {
@@ -99,7 +99,7 @@ tasks.withType(JavaCompile) {
 jar {
     manifest {
         //attributes 'Main-Class': 'org.seeek.util.selenuim.web.capture.UgSearchTestCase'
-        attributes 'Main-Class': 'org.seeek.util.selenuim.web.capture.WebManualCheckTool'
+        attributes 'Main-Class': 'org.seeek.utilities.web.CheckWebManual'
     }
   from configurations.compile.collect { it.isDirectory() ? it : zipTree(it) }
 }

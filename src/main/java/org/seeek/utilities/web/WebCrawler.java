@@ -76,6 +76,7 @@ public class WebCrawler {
                 if (!checkAnchor(anchor, checkedAnchors, addAnchors)) continue; 
 //                addAnchors.add(getUrlPath(anchor));
               addAnchors.add(anchor.attr("abs:href"));
+              System.out.println( "check -> " + anchor.attr("abs:href"));
             }
     
             if (addAnchors.size() != 0) {
