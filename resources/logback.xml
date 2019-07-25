@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="60 seconds">
+ 
+  <property name="logDir" value="./logs/" />
+  <property name="fileName" value="check_web.log" />
+  <property name="format1" value="%d{yyyy/MM/dd HH:mm:ss.SSS} [%t] %-6p %c{10} %m%n" />
+ 
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${logDir}${fileName}</file>
+    
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${logDir}${fileName}.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>1</maxHistory>
+    </rollingPolicy>
+    
+    <encoder>
+      <pattern>${format1}</pattern>
+    </encoder>
+  </appender>
+ 
+  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>${format1}</pattern>
+    </encoder>
+  </appender>
+ 
+  <root level="trace">
+    <appender-ref ref="FILE" />
+    <appender-ref ref="STDOUT" />
+  </root>
+</configuration>

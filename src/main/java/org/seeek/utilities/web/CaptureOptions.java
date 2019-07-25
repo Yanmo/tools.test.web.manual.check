@@ -2,6 +2,7 @@ package org.seeek.utilities.web;
 
 import java.io.*;
 import java.util.*;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
 import org.apache.commons.cli.Options;  
@@ -9,6 +10,9 @@ import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
+
+import com.gargoylesoftware.htmlunit.ProxyConfig;
+import java.net.Proxy;
 
 public class CaptureOptions {
     
@@ -45,6 +49,10 @@ public class CaptureOptions {
     public static final String PROXYHOST = "proxyhost";
     public static final String PROXYPORT = "proxyport";
     public static final String NEST = "nest";
+    public static final String CAPTURE = "capture";
+    public static final String TIMEOUT = "timeout";
+    public static final String DEBUG = "debug";
+    public static final Integer DEFAULTTIMEOUT = 15*1000;
 
     public static final String PLATFORM = "platform";
     
@@ -63,8 +71,8 @@ public class CaptureOptions {
     private void initCaptureOptions(CommandLine cmd) throws Exception {
         // generate options for capture web driver.
         // required
-        setOptions(SRC_URL, new URL(cmd.getOptionValue("i")));
-        setOptions(SAVE_DIR, new URL("file://" + cmd.getOptionValue("o")));
+        setOptions(SRC_URL, new File(cmd.getOptionValue("i")));
+        setOptions(SAVE_DIR, new File(cmd.getOptionValue("o")));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         setOptions(PLATFORM, cmd.getOptionValue("p"));
         // optional
@@ -76,13 +84,15 @@ public class CaptureOptions {
             else {setOptions(HEIGHT, DEFAULTHEIGHT);}
         if (cmd.hasOption("w")) { setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("w").toString())); }
             else {setOptions(WIDTH, DEFAULTWIDTH);}
-        if (cmd.hasOption("safaripreview")) { setOptions(SAFARIPREVIEW, Boolean.valueOf(cmd.getOptionValue("safaripreview")));}
-            else {setOptions(SAFARIPREVIEW, false);}
         if (cmd.hasOption("proxyhost")) { setOptions(PROXYHOST, cmd.getOptionValue("proxyhost")); }
-        if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, cmd.getOptionValue("proxyport")); }
-        if (cmd.hasOption("nest")) { setOptions(NEST, Boolean.valueOf(cmd.getOptionValue("nest"))); } 
-            else {setOptions(NEST, true);}
+        if (cmd.hasOption("proxyport")) { setOptions(PROXYPORT, Integer.parseInt(cmd.getOptionValue("proxyport"))); }
         // no-arg constructor
+        if (cmd.hasOption("t")) { setOptions(TIMEOUT, Integer.parseInt(cmd.getOptionValue("t").toString())); }
+        else {setOptions(TIMEOUT, DEFAULTTIMEOUT);}
+        setOptions(SAFARIPREVIEW, cmd.hasOption("safaripreview"));
+        setOptions(NEST, cmd.hasOption("nest"));
+        setOptions(DEBUG, cmd.hasOption("debug"));
+        setOptions(CAPTURE, cmd.hasOption("c"));
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);
    }
@@ -100,10 +110,13 @@ public class CaptureOptions {
         options.addOption("js", true, "specific execute javascriot file.");
         options.addOption("w", true, "specific window width.");
         options.addOption("h", true, "specific window height.");
-        options.addOption("safaripreview", true, "specific use or don't use safari preview version.");
+        options.addOption("safaripreview", false, "specific use or don't use safari preview version.");
         options.addOption("proxyhost", true, "specific proxy host name.");
         options.addOption("proxyport", true, "specific proxy port number.");
-        options.addOption("nest", true, "specific nested link.");
+        options.addOption("nest", false, "specific nested link.");
+        options.addOption("c", false, "specific capture .");
+        options.addOption("t", true, "specific timeout[s] .");
+        options.addOption("debug", false, "specific debug mode .");
 
         // parse command-line args
         CommandLineParser cmdparser = new DefaultParser();
@@ -124,4 +137,38 @@ public class CaptureOptions {
         return this.options.get(k);
     }
 
+    public Boolean isSetProxyConfig() throws Exception {
+        return (Boolean)this.hasOptions(CaptureOptions.PROXYHOST);
+    }
+    
+    public ProxyConfig getProxyConfig4WebClient() throws Exception {
+        ProxyConfig proxy;
+        if ((Boolean)this.hasOptions(CaptureOptions.PROXYHOST)) {
+            proxy = new ProxyConfig((String)this.getOptions(CaptureOptions.PROXYHOST), Integer.valueOf(this.getOptions(CaptureOptions.PROXYPORT).toString()));
+        } else {
+            proxy = null;
+        }
+        return proxy;
+    }
+
+    public Proxy getProxyConfig() throws Exception {
+        Proxy proxy;
+        if ((Boolean)this.hasOptions(CaptureOptions.PROXYHOST)) {
+            proxy = new Proxy(Proxy.Type.HTTP, 
+                              new InetSocketAddress((String)this.getOptions(CaptureOptions.PROXYHOST), 
+                                                    (Integer)this.getOptions(CaptureOptions.PROXYPORT)
+                                                   )
+                              );
+        } else {
+            proxy = null;
+        }
+        return proxy;
+    }
+    
+    
+    public Integer getTimeOut() throws Exception {
+        return (Integer)this.getOptions(CaptureOptions.TIMEOUT);
+    }
+        
+    
 }

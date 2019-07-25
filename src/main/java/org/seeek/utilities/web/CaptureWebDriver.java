@@ -1,37 +1,28 @@
 package org.seeek.utilities.web;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
-import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.*;
-
-import java.awt.image.BufferedImage;
 import java.io.*;
-import org.apache.commons.io.FilenameUtils;
 
 // for selenuim library
 import org.openqa.selenium.*;
-import org.openqa.selenium.WebDriver.Options;
 import org.openqa.selenium.chrome.*;
 import org.openqa.selenium.firefox.*;
 import org.openqa.selenium.ie.*;
 import org.openqa.selenium.edge.*;
 import org.openqa.selenium.safari.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
+
 import org.openqa.selenium.remote.*;
 
 // for Mobile Devices library
 import io.appium.java_client.AppiumDriver;
-import io.appium.java_client.MobileElement;
-import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.ios.IOSDriver;
 import io.appium.java_client.remote.MobileCapabilityType;
 //for ashot library
 import ru.yandex.qatools.ashot.*;
-import ru.yandex.qatools.ashot.coordinates.Coords;
 import ru.yandex.qatools.ashot.shooting.*;
 
 public class CaptureWebDriver {
@@ -44,11 +35,11 @@ public class CaptureWebDriver {
     public String curBrowserOptionType;
     public String curLanguage;
     public DesiredCapabilities capabilities;
+    public Integer timeout;
     
     // for selenium web driver
     public WebDriver driver;
     private org.openqa.selenium.Dimension size;
-    private File capture;
     private WebDriverWait wait;
 
     
@@ -58,6 +49,7 @@ public class CaptureWebDriver {
         this.size = new Dimension((int)options.getOptions(CaptureOptions.WIDTH), (int)options.getOptions(CaptureOptions.HEIGHT));
         this.capabilities = new DesiredCapabilities();
         setPlatform((String)options.getOptions(CaptureOptions.PLATFORM));
+        this.timeout = (Integer)options.getOptions(CaptureOptions.TIMEOUT);
     }
     
     public void setLocalWebDriver() throws Exception {
@@ -72,7 +64,7 @@ public class CaptureWebDriver {
         case BrowserType.FIREFOX:
             System.setProperty(GeckoDriverService.GECKO_DRIVER_EXE_PROPERTY,
                     getLocalWebDriverPath());
-            FirefoxProfile ffprofiles = new FirefoxProfile();
+            new FirefoxProfile();
             FirefoxOptions ffOptions = new FirefoxOptions();
             ffOptions.addArguments("-headless");
             this.driver = new FirefoxDriver(ffOptions);
@@ -98,8 +90,9 @@ public class CaptureWebDriver {
         int y = 10;
         this.driver.manage().window().setPosition(new Point(x, y));
         this.driver.manage().window().setSize(this.size); //if safari is not preview version, error occued here.
-        this.driver.manage().timeouts().implicitlyWait(15, TimeUnit.SECONDS);
-        this.wait = new WebDriverWait(this.driver, 10);
+        this.driver.manage().timeouts().implicitlyWait(this.timeout, TimeUnit.MILLISECONDS);
+        this.driver.manage().timeouts().setScriptTimeout(this.timeout, TimeUnit.MILLISECONDS);
+        this.wait = new WebDriverWait(this.driver, this.timeout/1000);
     }
 
     private String getLocalWebDriverPath() throws Exception {
@@ -272,19 +265,22 @@ public class CaptureWebDriver {
 
         this.driver.get(url.toString());
         if (!this.js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
+        try {
+            this.wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".tab-pane.active")));
+        } catch (Exception e) {
+            this.wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".tab-pane.active")));
+        }
         ShootingStrategy shootingConditions = getShootingAShotConditions();
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
-        Thread.sleep(100);
         ImageIO.write(screenshot.getImage(), "PNG", file);
     }
 
     public void shootingAShotNow(File file) throws Exception {
 
         if (!this.js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
+        this.wait.until(ExpectedConditions. presenceOfElementLocated(By.cssSelector(".tab-pane.active")));
         ShootingStrategy shootingConditions = getShootingAShotConditions();
-        Thread.sleep(100);
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
-        Thread.sleep(100);
         ImageIO.write(screenshot.getImage(), "PNG", file);
     }
     
@@ -339,6 +335,8 @@ public class CaptureWebDriver {
     public String getCaptureFileName(URL url) throws Exception {
         
         URL saveDir = (URL)this.options.getOptions(CaptureOptions.SAVE_DIR);
+        File dir = new File(saveDir.getPath());
+        if (!dir.exists()) { dir.mkdirs(); }
         String basename = url.getPath().replace(".html", "").replace("/", "_");
         String captureFileName = saveDir.getPath() + File.separator     //  parameter destination directory path
                                  + basename + "_"                       //  base name from url

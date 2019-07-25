@@ -97,6 +97,9 @@ dependencies {
     // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
     testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
 
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-core
+    compile group: 'ch.qos.logback', name: 'logback-core', version: '1.2.3'
+
     // https://mvnrepository.com/artifact/net.sourceforge.htmlunit/htmlunit
     compile group: 'net.sourceforge.htmlunit', name: 'htmlunit', version: '2.35.0'
 

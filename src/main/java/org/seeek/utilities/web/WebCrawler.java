@@ -1,7 +1,5 @@
 package org.seeek.utilities.web;
 
-import java.net.InetSocketAddress;
-import java.net.Proxy;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,28 +9,38 @@ import org.apache.commons.io.FilenameUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.gargoylesoftware.htmlunit.*;
+import com.gargoylesoftware.htmlunit.html.HtmlPage;
 
 public class WebCrawler {
 
     private URL siteUrl;
-    private Proxy proxy;
-    private List<String> pagesUrl;
+    private List<String> internalUrl;
+    private List<String> externalUrl;
     private Boolean nestcrawl; 
+    private Logger log;
+    private CaptureOptions options;
+    private Integer timeOut; 
     
     public WebCrawler(CaptureOptions options) throws Exception {
-
-        siteUrl = (URL)options.getOptions(CaptureOptions.SRC_URL);
-        proxy = (options.hasOptions(CaptureOptions.PROXYHOST)) ? new Proxy(Proxy.Type.HTTP, new InetSocketAddress((String)options.getOptions(CaptureOptions.PROXYHOST), Integer.valueOf(options.getOptions(CaptureOptions.PROXYPORT).toString())))
-                   : null;
-        nestcrawl = (Boolean) options.getOptions(CaptureOptions.NEST);
+        this.options = options;
+        this.nestcrawl = (Boolean) options.getOptions(CaptureOptions.NEST);
+        this.log = LoggerFactory.getLogger(this.getClass().getName());
+        java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(java.util.logging.Level.OFF);
+        this.timeOut = (Integer)options.getOptions(CaptureOptions.TIMEOUT);
+        
     }
     
-    public void start() throws Exception {
-        pagesUrl = crawl(siteUrl, new ArrayList<String>());
+    public void start(URL siteUrl) throws Exception {
+        this.siteUrl = siteUrl;
+        internalUrl = crawl(this.siteUrl, new ArrayList<String>());
     }
     
     public List<String> getPagesUrl() throws Exception {
-        return pagesUrl;
+        return internalUrl;
     }
     
     private Boolean checkAnchor(Element anchor, List<String> checkedAnchors, List<String> addAnchors) throws Exception {
@@ -52,7 +60,10 @@ public class WebCrawler {
 
         if (!Arrays.asList(allowProtcol).contains(protocol)) return false;
         if (!Arrays.asList(allowExtension).contains(extension)) return false;
-        if (!siteUrl.getHost().equals(hrefUrl.getHost())) return false;
+        if (!siteUrl.getHost().equals(hrefUrl.getHost())) {
+            externalUrl.add(hrefUrl.toString());
+            return false;
+        }
 
         return true;
     }
@@ -65,18 +76,33 @@ public class WebCrawler {
     private List<String> crawl(URL url, List<String> checkedAnchors) throws Exception {
         
         try {
-            Document html = (proxy != null) 
-                    ? Jsoup.connect(url.toString()).proxy(proxy).get() 
-                    : Jsoup.connect(url.toString()).get();
+            WebClient webClient = new WebClient(BrowserVersion.CHROME);
+            if (this.options.hasOptions(CaptureOptions.PROXYHOST)) {
+                webClient.getOptions().setProxyConfig(options.getProxyConfig4WebClient());
+            }
+            webClient.getOptions().setJavaScriptEnabled(true);
+            webClient.getOptions().setCssEnabled(false);
+            webClient.getOptions().setThrowExceptionOnScriptError(false);
+            webClient.getOptions().setThrowExceptionOnFailingStatusCode(false);
+            webClient.getOptions().setUseInsecureSSL(true);
+            webClient.setAjaxController(new NicelyResynchronizingAjaxController());
+
+            webClient.addRequestHeader("Access-Control-Allow-Origin", "*");            
+            HtmlPage curPage = webClient.getPage(url);
+
+            webClient.getOptions().setTimeout(this.timeOut); // ms
+            webClient.setJavaScriptTimeout(this.timeOut);   // ms
+            webClient.waitForBackgroundJavaScript(this.timeOut);    // ms
+
+            Document html = Jsoup.parse(curPage.asXml(), url.toString());
+            webClient.close();
             org.jsoup.select.Elements anchors = html.select("a");
-            System.out.println( "check -> " + url.toString());
             List<String> addAnchors = new ArrayList<String>();
     
             for (Element anchor : anchors) {
                 if (!checkAnchor(anchor, checkedAnchors, addAnchors)) continue; 
-//                addAnchors.add(getUrlPath(anchor));
-              addAnchors.add(anchor.attr("abs:href"));
-              System.out.println( "check -> " + anchor.attr("abs:href"));
+                addAnchors.add(getUrlPath(anchor));
+                log.info(anchor.attr("abs:href"));
             }
     
             if (addAnchors.size() != 0) {
@@ -88,7 +114,10 @@ public class WebCrawler {
                 }
             }
         } catch (Exception e) {
-            System.out.println( "check -> " + url.toString() + ": error ");
+            e.printStackTrace(System.err);
+            log.error(url.toString());
+            log.error(e.getMessage());
+            throw e;
         }
 
         return checkedAnchors;
