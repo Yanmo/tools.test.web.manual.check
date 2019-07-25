@@ -91,6 +91,15 @@ dependencies {
     // https://mvnrepository.com/artifact/io.appium/java-client
     compile group: 'io.appium', name: 'java-client', version: '6.1.0'
 
+    // https://mvnrepository.com/artifact/org.slf4j/slf4j-api
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.26'
+
+    // https://mvnrepository.com/artifact/ch.qos.logback/logback-classic
+    testCompile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    // https://mvnrepository.com/artifact/net.sourceforge.htmlunit/htmlunit
+    compile group: 'net.sourceforge.htmlunit', name: 'htmlunit', version: '2.35.0'
+
 }
 
 tasks.withType(JavaCompile) {
