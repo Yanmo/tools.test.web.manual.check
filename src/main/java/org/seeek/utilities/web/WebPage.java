@@ -28,13 +28,13 @@ public class WebPage {
     private Document html;
     private CaptureOptions options;
     private Object proxy;
-    private static Logger log;
+    private Logger logger;
     private List<String> errLinks;
 
     public WebPage(CaptureOptions options) throws Exception {
         
-        log = LoggerFactory.getLogger(this.getClass().getName());
         this.options = options;
+        logger = (Logger)options.getOptions(CaptureOptions.LOGGER);
     }
 
     public void load(String url) throws Exception {
@@ -52,13 +52,13 @@ public class WebPage {
     public void checkMedia() throws Exception {
         Elements media = html.select("[src]");
         for (Element src : media) {
-            log.debug("  src : " + src.attr("abs:src"));
+            logger.debug("  src : " + src.attr("abs:src"));
             if (!isExistURL(src.attr("abs:src"))) {
                 errLinks.add(src.attr("abs:src"));
                 if (src.tagName().equals("img")) {
-                    log.error(" * " + src.tagName() + ": <" + src.attr("abs:src") + ">  (" + trim(src.attr("alt"), 20) + ")");
+                    logger.error(" * " + src.tagName() + ": <" + src.attr("abs:src") + ">  (" + trim(src.attr("alt"), 20) + ")");
                 } else {
-                    log.error(" * " + src.tagName() + ": <" + src.attr("abs:src") + ">");
+                    logger.error(" * " + src.tagName() + ": <" + src.attr("abs:src") + ">");
                 }
             }
         }
@@ -68,10 +68,10 @@ public class WebPage {
         Elements imports = html.select("link[href]");
 
         for (Element link : imports) {
-            log.debug("  import : " + link.attr("abs:href"));
+            logger.debug("  import : " + link.attr("abs:href"));
             if (!isExistURL(link.attr("abs:href"))) {
                 errLinks.add(link.attr("abs:href"));
-                log.error(" * " + link.tagName() + ": <" + link.attr("abs:href") + ">  (" + link.attr("rel") + ")");
+                logger.error(" * " + link.tagName() + ": <" + link.attr("abs:href") + ">  (" + link.attr("rel") + ")");
             }
         }
     
@@ -80,13 +80,13 @@ public class WebPage {
     public void checkLinks(List<String> siteLinks) throws Exception {
         Elements links = html.select(".contents a[href]");
         for (Element link : links) {
-            log.debug("  link : " + link.attr("abs:href"));
+            logger.debug("  link : " + link.attr("abs:href"));
             String linkUrl = getUrlPath(link);
             if (link.attr("abs:href").contains(".contents")) continue;
             if (siteLinks.contains(linkUrl)) continue;
             if (!isExistURL(linkUrl)) {
                 errLinks.add(link.attr("abs:href"));
-                log.error(" * a: <" + link.attr("abs:href") + ">  (" + trim(link.text(), 35) + ")");
+                logger.error(" * a: <" + link.attr("abs:href") + ">  (" + trim(link.text(), 35) + ")");
             }
         }    
     }
@@ -110,7 +110,7 @@ public class WebPage {
     
     public void writeCheckResultList2json() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writeValueAsString(log);
+        String json = mapper.writeValueAsString(logger);
         System.out.println(json);
     }
 
@@ -123,7 +123,10 @@ public class WebPage {
         int status = 0;
         try {
             url = new URL(sUrl);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            
+            HttpURLConnection conn = options.hasOptions(CaptureOptions.PROXYHOST) ? 
+                                     (HttpURLConnection) url.openConnection(options.getProxyConfig()):
+                                     (HttpURLConnection) url.openConnection();
             conn.setInstanceFollowRedirects(true);
             conn.setConnectTimeout(this.options.getTimeOut());
             conn.setRequestMethod("HEAD");
@@ -132,10 +135,10 @@ public class WebPage {
             conn.disconnect();
         } catch (MalformedURLException e) {
             // TODO Auto-generated catch block
-            log.error(e.getMessage());
+            logger.error(e.getMessage());
         } catch (IOException e) {
             // TODO Auto-generated catch block
-            log.error(e.getMessage());
+            logger.error(e.getMessage());
         }
 
         if (status == HttpURLConnection.HTTP_OK) {

@@ -18,18 +18,18 @@ import com.gargoylesoftware.htmlunit.html.HtmlPage;
 public class WebCrawler {
 
     private URL siteUrl;
-    private List<String> internalUrl;
-    private List<String> externalUrl;
+    private List<String> internalUrl = new ArrayList<String>();
+    private List<String> externalUrl = new ArrayList<String>();
     private Boolean nestcrawl; 
-    private Logger log;
+    private Logger logger;
     private CaptureOptions options;
     private Integer timeOut; 
     
     public WebCrawler(CaptureOptions options) throws Exception {
         this.options = options;
         this.nestcrawl = (Boolean) options.getOptions(CaptureOptions.NEST);
-        this.log = LoggerFactory.getLogger(this.getClass().getName());
         java.util.logging.Logger.getLogger("com.gargoylesoftware").setLevel(java.util.logging.Level.OFF);
+        this.logger = (Logger)options.getOptions(CaptureOptions.LOGGER);
         this.timeOut = (Integer)options.getOptions(CaptureOptions.TIMEOUT);
         
     }
@@ -102,7 +102,7 @@ public class WebCrawler {
             for (Element anchor : anchors) {
                 if (!checkAnchor(anchor, checkedAnchors, addAnchors)) continue; 
                 addAnchors.add(getUrlPath(anchor));
-                log.info(anchor.attr("abs:href"));
+                logger.info(anchor.attr("abs:href"));
             }
     
             if (addAnchors.size() != 0) {
@@ -115,8 +115,8 @@ public class WebCrawler {
             }
         } catch (Exception e) {
             e.printStackTrace(System.err);
-            log.error(url.toString());
-            log.error(e.getMessage());
+            logger.error(url.toString());
+            logger.error(e.getMessage());
             throw e;
         }
 

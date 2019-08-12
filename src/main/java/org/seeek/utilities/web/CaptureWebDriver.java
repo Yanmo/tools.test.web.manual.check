@@ -15,7 +15,8 @@ import org.openqa.selenium.edge.*;
 import org.openqa.selenium.safari.*;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.openqa.selenium.remote.*;
 
 // for Mobile Devices library
@@ -33,7 +34,6 @@ public class CaptureWebDriver {
     public String curPlatform;
     public String curBrowserType;
     public String curBrowserOptionType;
-    public String curLanguage;
     public DesiredCapabilities capabilities;
     public Integer timeout;
     
@@ -41,6 +41,7 @@ public class CaptureWebDriver {
     public WebDriver driver;
     private org.openqa.selenium.Dimension size;
     private WebDriverWait wait;
+    private Logger logger;
 
     
     public CaptureWebDriver(CaptureOptions options) throws Exception {
@@ -265,11 +266,11 @@ public class CaptureWebDriver {
 
         this.driver.get(url.toString());
         if (!this.js.isEmpty()) ((JavascriptExecutor) this.driver).executeScript(this.js);
-        try {
-            this.wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".tab-pane.active")));
-        } catch (Exception e) {
-            this.wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".tab-pane.active")));
-        }
+//        try {
+//            this.wait.until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(".tab-pane.active")));
+//        } catch (Exception e) {
+//            this.wait.until(ExpectedConditions.presenceOfElementLocated(By.cssSelector(".tab-pane.active")));
+//        }
         ShootingStrategy shootingConditions = getShootingAShotConditions();
         Screenshot screenshot = new AShot().shootingStrategy(shootingConditions).takeScreenshot(this.driver);
         ImageIO.write(screenshot.getImage(), "PNG", file);
@@ -323,22 +324,20 @@ public class CaptureWebDriver {
         if (!dir.exists()) { dir.mkdirs(); }
         String captureFileName = saveDir.getPath() + File.separator + basename + File.separator     //  parameter destination directory path
                                  + basename + "_"                       //  base name from url
-                                 + this.curLanguage + "_"                       //  base name from url
                                  + this.curPlatform + "_"                                    //  platform
                                  + this.curBrowserOptionType + "_"                                    //  browser name
                                  + this.size.width + "x" + this.size.height                     //  size
                                  + options.getOptions(CaptureOptions.SAVE_EXT).toString();      //  extension
-        System.out.println( "captured -> " + captureFileName);
+        logger.info("captured -> " + captureFileName);
         return captureFileName;
     }
 
     public String getCaptureFileName(URL url) throws Exception {
         
-        URL saveDir = (URL)this.options.getOptions(CaptureOptions.SAVE_DIR);
-        File dir = new File(saveDir.getPath());
+        File dir = new File(this.options.getOptions(CaptureOptions.SAVE_DIR).toString());
         if (!dir.exists()) { dir.mkdirs(); }
         String basename = url.getPath().replace(".html", "").replace("/", "_");
-        String captureFileName = saveDir.getPath() + File.separator     //  parameter destination directory path
+        String captureFileName = dir.getPath() + File.separator     //  parameter destination directory path
                                  + basename + "_"                       //  base name from url
                                  + this.curBrowserOptionType + "_"                                    //  browser name
                                  + this.size.width + "x" + this.size.height                     //  size

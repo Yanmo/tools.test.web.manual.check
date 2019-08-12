@@ -5,6 +5,8 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.gargoylesoftware.htmlunit.javascript.host.html.Option;
+
 
 public class CaptureWebDriverThread extends Thread {
 
@@ -12,21 +14,21 @@ public class CaptureWebDriverThread extends Thread {
     private List<String> pagesUrl;
     private URL remote;
     private String curBrowserType;
-    private Logger log;
+    private Logger logger;
 
     public CaptureWebDriverThread(CaptureOptions options, String browserType, List<String> pageUrl) throws Exception {
-        cwd = new CaptureWebDriver(options);
-        pagesUrl = pageUrl;
-        remote = (URL) options.getOptions(CaptureOptions.REMOTE);
-        curBrowserType = browserType;
-        log = LoggerFactory.getLogger(this.getClass().getName());
+        this.cwd = new CaptureWebDriver(options);
+        this.pagesUrl = pageUrl;
+        this.remote = (URL) options.getOptions(CaptureOptions.REMOTE);
+        this.curBrowserType = browserType;
+        this.logger = (Logger)options.getOptions(CaptureOptions.LOGGER);
     }
 
     public void run() {
 
         try {
-            log.info("------------ Capture Finish ------------ ");
-            log.info("Browser : " + curBrowserType);
+            logger.info("------------ Web Pages Capture Start ------------ ");
+            logger.info("Browser : " + curBrowserType);
             cwd.setBrowserType(curBrowserType);
             if (remote == null) {
                 cwd.setLocalWebDriver();
@@ -36,20 +38,21 @@ public class CaptureWebDriverThread extends Thread {
             for (String url : pagesUrl) {
                 URL targeturl = new URL(url);
                 cwd.capture(targeturl);
-                log.info("Captured : " + url);
+                logger.info("Captured : " + url);
             }
             cwd.destroy();
-            log.info("------------ Capture Finish ------------ ");
+            logger.info("------------ Web Pages Capture Finish ------------ ");
         } catch (Exception e) {
-            log.error(e.getMessage());
-            log.error(" curBrowserType :  " + cwd.curBrowserType);
-            log.error(" curLanguage :  " + cwd.curLanguage);
-            log.error(" curPlatform :  " + cwd.curPlatform);
+            e.printStackTrace();
+            logger.error(e.getMessage());
+            logger.error(" curBrowserType :  " + cwd.curBrowserType);
+            logger.error(" curPlatform :  " + cwd.curPlatform);
             cwd.destroy();
             try {
                 throw e;
             } catch (Exception e1) {
-                log.error(e1.getMessage());
+                e1.printStackTrace();
+                logger.error(e1.getMessage());
             }
         }
     }

@@ -5,6 +5,10 @@ import java.util.*;
 import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Paths;
+
 import org.apache.commons.cli.Options;  
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.CommandLine;
@@ -12,7 +16,15 @@ import org.apache.commons.cli.DefaultParser;
 import org.apache.commons.cli.ParseException;
 
 import com.gargoylesoftware.htmlunit.ProxyConfig;
+
+import ch.qos.logback.classic.LoggerContext;
+import ch.qos.logback.classic.joran.JoranConfigurator;
+import ch.qos.logback.core.joran.spi.JoranException;
+
 import java.net.Proxy;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
+
 
 public class CaptureOptions {
     
@@ -36,6 +48,7 @@ public class CaptureOptions {
     // constants for capture options.
     public static final String LANG = "lang";
     public static final String BROWSER = "browser";
+    public static final String MODE = "mode";
     public static final String SRC_EXT = "srcExt";
     public static final String SRC_URL = "src";
     public static final String SAVE_DIR = "savedir";
@@ -49,10 +62,13 @@ public class CaptureOptions {
     public static final String PROXYHOST = "proxyhost";
     public static final String PROXYPORT = "proxyport";
     public static final String NEST = "nest";
-    public static final String CAPTURE = "capture";
     public static final String TIMEOUT = "timeout";
     public static final String DEBUG = "debug";
     public static final Integer DEFAULTTIMEOUT = 15*1000;
+    public static final String LOGGER = "logger";
+    public static final String LOGGERNAME = "WebManualCheck";
+    public static final String DEFAULTMODE = "sm";
+    public static final String LOGBACKXML = "lib" + File.separator + "logback.xml";
 
     public static final String PLATFORM = "platform";
     
@@ -71,15 +87,26 @@ public class CaptureOptions {
     private void initCaptureOptions(CommandLine cmd) throws Exception {
         // generate options for capture web driver.
         // required
-        setOptions(SRC_URL, new File(cmd.getOptionValue("i")));
-        setOptions(SAVE_DIR, new File(cmd.getOptionValue("o")));
+        String source = Paths.get(cmd.getOptionValue("i")).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+        setOptions(SRC_URL, new File(source));
+        Files.createDirectories(Paths.get(cmd.getOptionValue("o")));
+        String save_dir = Paths.get(cmd.getOptionValue("o")).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+        setOptions(SAVE_DIR, new File(save_dir));
         setOptions(BROWSER, Arrays.asList(cmd.getOptionValue("b").split(":")));
         setOptions(PLATFORM, cmd.getOptionValue("p"));
         // optional
         if (cmd.hasOption("l")) { setOptions(LANG, cmd.getOptionValue("l").split(":"));}
-        if (cmd.hasOption("driver")) { setOptions(DRIVERPATH, cmd.getOptionValue("driver"));}
+        if (cmd.hasOption("driver")) { 
+            String driver = Paths.get(cmd.getOptionValue("driver")).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+            setOptions(DRIVERPATH, driver);
+        }
+        if (cmd.hasOption("m")) { setOptions(MODE, cmd.getOptionValue("m"));}
+        else {setOptions(MODE, DEFAULTMODE);}
         if (cmd.hasOption("remote")) { setOptions(REMOTE, new URL(cmd.getOptionValue("remote"))); }
-        if (cmd.hasOption("js")) { setOptions(JS, Utils.readAll(cmd.getOptionValue("js")).replaceAll(br, "")); }
+        if (cmd.hasOption("js")) { 
+            String js = Paths.get(cmd.getOptionValue("js")).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+            setOptions(JS, Utils.readAll(js).replaceAll(br, "")); 
+        }
         if (cmd.hasOption("h")) { setOptions(HEIGHT, Integer.parseInt(cmd.getOptionValue("h").toString())); }
             else {setOptions(HEIGHT, DEFAULTHEIGHT);}
         if (cmd.hasOption("w")) { setOptions(WIDTH, Integer.parseInt(cmd.getOptionValue("w").toString())); }
@@ -91,10 +118,26 @@ public class CaptureOptions {
         else {setOptions(TIMEOUT, DEFAULTTIMEOUT);}
         setOptions(SAFARIPREVIEW, cmd.hasOption("safaripreview"));
         setOptions(NEST, cmd.hasOption("nest"));
+
         setOptions(DEBUG, cmd.hasOption("debug"));
-        setOptions(CAPTURE, cmd.hasOption("c"));
+        Logger logger = LoggerFactory.getLogger(LOGGERNAME);
+        ch.qos.logback.classic.Logger logback = (ch.qos.logback.classic.Logger) logger;
+        if(cmd.hasOption("debug")) {logback.setLevel(ch.qos.logback.classic.Level.DEBUG);} 
+        else { logback.setLevel(ch.qos.logback.classic.Level.INFO);}
+        setOptions(LOGGER, logger);
         setOptions(SRC_EXT, DEFAULT_SRC_EXT);
         setOptions(SAVE_EXT, DEFAULT_SAVE_EXT);
+        
+        LoggerContext lc = (LoggerContext) LoggerFactory.getILoggerFactory();
+        JoranConfigurator configurator = new JoranConfigurator();
+        configurator.setContext(lc);
+        lc.reset();
+        try {
+            String logbackxml = System.getProperty("user.dir") + File.separator + LOGBACKXML;
+            configurator.doConfigure(logbackxml);
+        } catch (JoranException e) {
+            e.printStackTrace();
+        }        
    }
     
     private CommandLine parseCommandlineOptions (String[] args) throws Exception {
@@ -103,8 +146,8 @@ public class CaptureOptions {
         options.addRequiredOption("i", "in", true, "specific input file.");
         options.addRequiredOption("o", "out", true, "specific output directory.");
         options.addRequiredOption("b", "browser", true, "specific browser name.");
-        options.addRequiredOption("l", "lang", true, "specific language");
         options.addRequiredOption("p", "platform", true, "specific use platform(win or mac).");
+        options.addOption("m", true, "specific use search or capture mode(s or c).");
         options.addOption("driver", true, "specific webdirver directory.");
         options.addOption("remote", true, "specific remote web server adoress.");
         options.addOption("js", true, "specific execute javascriot file.");
@@ -114,7 +157,6 @@ public class CaptureOptions {
         options.addOption("proxyhost", true, "specific proxy host name.");
         options.addOption("proxyport", true, "specific proxy port number.");
         options.addOption("nest", false, "specific nested link.");
-        options.addOption("c", false, "specific capture .");
         options.addOption("t", true, "specific timeout[s] .");
         options.addOption("debug", false, "specific debug mode .");
 
